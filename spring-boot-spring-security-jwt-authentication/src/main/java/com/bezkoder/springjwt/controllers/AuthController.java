@@ -29,8 +29,8 @@ import com.bezkoder.springjwt.payload.response.JwtResponse;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.repository.RoleRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
-import com.bezkoder.springjwt.security.jwt.JwtUtils;
-import com.bezkoder.springjwt.security.services.UserDetailsImpl;
+import com.bezkoder.springjwt.security.JwtUtils;
+import com.bezkoder.springjwt.security.UserDetailsImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -100,7 +100,7 @@ public class AuthController {
 					roles.add(adminRole);
 
 					break;
-				case "mod":
+				case "teacher":
 					Role modRole = roleRepository.findByName(ERole.ROLE_TEACHER)
 							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 					roles.add(modRole);

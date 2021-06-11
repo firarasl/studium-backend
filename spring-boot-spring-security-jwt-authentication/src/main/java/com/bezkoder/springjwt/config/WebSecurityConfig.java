@@ -1,5 +1,8 @@
-package com.bezkoder.springjwt.security;
+package com.bezkoder.springjwt.config;
 
+import com.bezkoder.springjwt.security.AuthEntryPointJwt;
+import com.bezkoder.springjwt.security.AuthTokenFilter;
+import com.bezkoder.springjwt.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +16,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.bezkoder.springjwt.security.jwt.AuthEntryPointJwt;
-import com.bezkoder.springjwt.security.jwt.AuthTokenFilter;
-import com.bezkoder.springjwt.security.services.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -57,7 +56,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.cors().and().csrf().disable()
 			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-			.authorizeRequests().antMatchers("/api/auth/**").permitAll()
+
+			.authorizeRequests().
+				antMatchers("/api/admin/**").hasRole("ADMIN")
+
+		.antMatchers("/api/auth/**").permitAll()
 			.antMatchers("/api/test/**").permitAll()
 			.anyRequest().authenticated();
 

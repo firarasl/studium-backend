@@ -1,5 +1,7 @@
 package com.bezkoder.springjwt.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +25,16 @@ public class User {
 
 
 	@NotBlank
+	@Size(max = 20)
+	private String firstname;
+
+	@NotBlank
+	@Size(max = 20)
+	private String lastname;
+
+	@NotBlank
 	@Size(max = 120)
+	@JsonIgnore
 	private String password;
 
 	@ManyToMany(fetch = FetchType.LAZY)
@@ -38,6 +49,22 @@ public class User {
 	public User(String username,String password) {
 		this.username = username;
 		this.password = password;
+	}
+
+	public String getFirstname() {
+		return firstname;
+	}
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+	public String getLastname() {
+		return lastname;
+	}
+
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
 	}
 
 	public Long getId() {
