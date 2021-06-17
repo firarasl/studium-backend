@@ -8,7 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(	name = "clazz")
+@Table(	name = "clazz",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "name")}
+)
 
 public class Clazz {
     @Id
@@ -20,7 +23,7 @@ public class Clazz {
     private String name;
 
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinTable(	name = "clazz_subject",
             joinColumns = @JoinColumn(name = "clazz_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id"))
@@ -28,11 +31,19 @@ public class Clazz {
 
 
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinTable(	name = "clazz_test",
             joinColumns = @JoinColumn(name = "clazz_id"),
             inverseJoinColumns = @JoinColumn(name = "tests_id"))
     private List<Test> tests = new ArrayList<>();
 
 
+    public Clazz(@NotBlank @Size(max = 50) String name) {
+        this.name = name;
+    }
+
+    public Clazz(Long id, @NotBlank @Size(max = 50) String name) {
+        this.id = id;
+        this.name = name;
+    }
 }

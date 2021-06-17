@@ -1,9 +1,7 @@
 package com.bezkoder.springjwt.security;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,23 +23,21 @@ public class UserDetailsImpl implements UserDetails {
 	@JsonIgnore
 	private String password;
 
-	private Collection<? extends GrantedAuthority> authorities;
+	private Collection<GrantedAuthority> authorities;
 
 	public UserDetailsImpl(Long id, String username, String password, String firstname, String lastname,
-			Collection<? extends GrantedAuthority> authorities) {
+			GrantedAuthority authorities) {
 		this.id = id;
 		this.username = username;
 		this.password = password;
 		this.firstname = firstname;
 		this.lastname = lastname;
 
-		this.authorities = authorities;
+		this.authorities.add(authorities);
 	}
 
 	public static UserDetailsImpl build(User user) {
-		List<GrantedAuthority> authorities = user.getRoles().stream()
-				.map(role -> new SimpleGrantedAuthority(role.getName().name()))
-				.collect(Collectors.toList());
+		GrantedAuthority authorities =  new SimpleGrantedAuthority(user.getRole().getName().name());
 
 		return new UserDetailsImpl(
 				user.getId(), 
@@ -54,6 +50,8 @@ public class UserDetailsImpl implements UserDetails {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
+//		return Arrays.asList(new SimpleGrantedAuthority(user.getRole()));
+
 		return authorities;
 	}
 

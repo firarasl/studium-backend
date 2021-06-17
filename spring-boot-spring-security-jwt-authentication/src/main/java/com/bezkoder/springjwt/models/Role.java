@@ -1,6 +1,8 @@
 package com.bezkoder.springjwt.models;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "roles")
@@ -13,8 +15,18 @@ public class Role {
 	@Column(length = 20)
 	private ERole name;
 
-	public Role() {
 
+
+	@OneToMany(
+			mappedBy = "role",
+			cascade = CascadeType.ALL,
+			orphanRemoval = true
+	)
+	private List<User> users = new ArrayList<>();
+
+
+
+	public Role() {
 	}
 
 	public Role(ERole name) {

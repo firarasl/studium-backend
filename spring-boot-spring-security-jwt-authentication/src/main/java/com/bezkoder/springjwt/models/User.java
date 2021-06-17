@@ -1,6 +1,7 @@
 package com.bezkoder.springjwt.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.Cascade;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,10 +18,12 @@ import javax.validation.constraints.Size;
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(updatable = false)
 	private Long id;
 
 	@NotBlank
 	@Size(max = 20)
+	@Column(updatable = false)
 	private String username;
 
 
@@ -37,17 +40,28 @@ public class User {
 	@JsonIgnore
 	private String password;
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(	name = "user_roles", 
-				joinColumns = @JoinColumn(name = "user_id"), 
-				inverseJoinColumns = @JoinColumn(name = "role_id"))
-	private Set<Role> roles = new HashSet<>();
+	@NotBlank
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+	private Role role;
+
+
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private Clazz clazz;
+
+
+//	@ManyToMany(fetch = FetchType.LAZY)
+//	@JoinTable(	name = "user_roles",
+//				joinColumns = @JoinColumn(name = "user_id"),
+//				inverseJoinColumns = @JoinColumn(name = "role_id"))
+//	private Set<Role> roles = new HashSet<>();
 
 	public User() {
 	}
 
-	public User(String username,String password) {
+	public User(@NotBlank @Size(max = 20) String username, @NotBlank @Size(max = 20) String firstname, @NotBlank @Size(max = 20) String lastname, String password) {
 		this.username = username;
+		this.firstname = firstname;
+		this.lastname = lastname;
 		this.password = password;
 	}
 
@@ -91,11 +105,20 @@ public class User {
 		this.password = password;
 	}
 
-	public Set<Role> getRoles() {
-		return roles;
+//	public Set<Role> getRoles() {
+//		return roles;
+//	}
+//
+//	public void setRoles(Set<Role> roles) {
+//		this.roles = roles;
+//	}
+
+
+	public Role getRole() {
+		return role;
 	}
 
-	public void setRoles(Set<Role> roles) {
-		this.roles = roles;
+	public void setRole(Role role) {
+		this.role = role;
 	}
 }
