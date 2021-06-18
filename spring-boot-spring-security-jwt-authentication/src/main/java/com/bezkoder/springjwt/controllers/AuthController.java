@@ -7,11 +7,13 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import com.bezkoder.springjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -42,6 +44,10 @@ public class AuthController {
 	@Autowired
 	UserRepository userRepository;
 
+
+	@Autowired
+	UserService userService;
+
 	@Autowired
 	RoleRepository roleRepository;
 
@@ -52,17 +58,25 @@ public class AuthController {
 	JwtUtils jwtUtils;
 
 	@PostMapping("/login")
-	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+	public ResponseEntity<?> authenticateUser( @Valid @RequestBody LoginRequest loginRequest) {
+		System.out.println("---");
 
+		System.out.println(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()).toString());
+		System.out.println("---");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
+
+		System.out.println(authentication);
 		SecurityContextHolder.getContext().setAuthentication(authentication);
+		System.out.println(authentication);
+
 		String jwt = jwtUtils.generateJwtToken(authentication);
-		
-		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();		
+
+		System.out.println(jwt);
+		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 		List<String> roles = userDetails.getAuthorities().stream()
-				.map(item -> item.getAuthority())
+				.map(GrantedAuthority::getAuthority)
 				.collect(Collectors.toList());
 
 		return ResponseEntity.ok(new JwtResponse(jwt, 
@@ -92,17 +106,14 @@ public class AuthController {
 		Role roles = null;
 
 		if (requestedRole == null) {
-			System.out.println("1");
 
 			Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
 					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 			roles =userRole;
 		} else {
-			System.out.println("2");
 
 			switch (requestedRole) {
 				case "admin":
-					System.out.println("3");
 
 					Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
 							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -123,7 +134,7 @@ public class AuthController {
 		}
 
 		user.setRole(roles);
-		userRepository.save(user);
+		userService.saveUser(user);
 
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}

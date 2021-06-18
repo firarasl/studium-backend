@@ -23,24 +23,26 @@ public class User {
 
 	@NotBlank
 	@Size(max = 20)
-	@Column(updatable = false)
+	@Column(updatable = false, name = "username")
 	private String username;
 
 
 	@NotBlank
 	@Size(max = 20)
+	@Column(name = "firstname")
 	private String firstname;
 
 	@NotBlank
 	@Size(max = 20)
+	@Column(name = "lastname")
 	private String lastname;
 
 	@NotBlank
 	@Size(max = 120)
 	@JsonIgnore
+	@Column(name = "password")
 	private String password;
 
-	@NotBlank
 	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 	private Role role;
 
@@ -113,6 +115,19 @@ public class User {
 //		this.roles = roles;
 //	}
 
+
+	@Override
+	public String toString() {
+		return "User{" +
+				"id=" + id +
+				", username='" + username + '\'' +
+				", firstname='" + firstname + '\'' +
+				", lastname='" + lastname + '\'' +
+				", password='" + password + '\'' +
+				", role=" + role +
+				", clazz=" + clazz +
+				'}';
+	}
 
 	public Role getRole() {
 		return role;

@@ -2,6 +2,7 @@ package com.bezkoder.springjwt.service;
 
 
 import com.bezkoder.springjwt.models.ERole;
+import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
@@ -9,7 +10,9 @@ import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -23,6 +26,9 @@ private UserRepository userRepository;
 
     @Autowired
     private SubjectRepository subjectRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
 
     @Override
@@ -43,8 +49,13 @@ private UserRepository userRepository;
     }
 
     @Override
+    @Transactional
     public void saveUser(User user) {
-        userRepository.save(user);
+
+        Role role = entityManager.getReference(Role.class, user.getRole().getId());
+        user.setRole(role);
+        entityManager.persist(user);
+
     }
 
     @Override

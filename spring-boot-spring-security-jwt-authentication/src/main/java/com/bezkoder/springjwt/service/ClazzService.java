@@ -13,4 +13,8 @@ public interface ClazzService {
     void updateClazzName(Long id, String name);
 
     void updateStudentToClazz(Long clazzId, Long studentId);
+
+    void deleteClazz(Long clazzId);
+
+    void manageClazzSubjects(Long clazzId, List<Long> subjectIds);
 }
