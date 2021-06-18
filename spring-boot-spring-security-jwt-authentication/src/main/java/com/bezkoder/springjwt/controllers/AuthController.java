@@ -61,7 +61,8 @@ public class AuthController {
 	public ResponseEntity<?> authenticateUser( @Valid @RequestBody LoginRequest loginRequest) {
 		System.out.println("---");
 
-		System.out.println(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()).toString());
+		System.out.println(authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())));
 		System.out.println("---");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
