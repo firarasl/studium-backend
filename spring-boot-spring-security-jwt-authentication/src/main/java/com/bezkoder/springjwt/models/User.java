@@ -1,6 +1,7 @@
 package com.bezkoder.springjwt.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.hibernate.annotations.Cascade;
 
 import java.util.HashSet;
@@ -43,7 +44,7 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+	@ManyToOne( cascade = CascadeType.REMOVE)
 	private Role role;
 
 

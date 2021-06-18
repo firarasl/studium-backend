@@ -8,11 +8,13 @@ import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -33,8 +35,7 @@ private UserRepository userRepository;
 
     @Override
     public List<User> getAllUsers() {
-
-        List<User> userList = userRepository.findAll();
+        List<User> userList = (List<User>) Hibernate.unproxy(userRepository.findAll());
         return userList;
     }
 

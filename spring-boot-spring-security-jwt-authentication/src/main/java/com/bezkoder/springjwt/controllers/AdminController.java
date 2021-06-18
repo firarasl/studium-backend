@@ -2,9 +2,13 @@ package com.bezkoder.springjwt.controllers;
 
 
 import com.bezkoder.springjwt.models.Clazz;
+import com.bezkoder.springjwt.models.ERole;
+import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.request.SignupRequest;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
+import com.bezkoder.springjwt.repository.RoleRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
 import com.bezkoder.springjwt.service.ClazzService;
 import com.bezkoder.springjwt.service.SubjectService;
@@ -12,6 +16,7 @@ import com.bezkoder.springjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,9 +35,15 @@ public class AdminController {
     @Autowired
     private ClazzService clazzService;
 
+
+    @Autowired
+    PasswordEncoder encoder;
+
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    RoleRepository roleRepository;
 
 //---------------------------- users ----------------------------------------
 
@@ -43,16 +54,63 @@ public class AdminController {
     }
 
     @PostMapping("/add-user")
-    public ResponseEntity<Void> addUser(@RequestParam User user){
-        userService.saveUser(user);
+    public ResponseEntity<?> addUser(@RequestBody SignupRequest userRequest){
+        System.out.println(userRequest);
 
-        return ResponseEntity.noContent().build();
+        if (userRepository.existsByUsername(userRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Error: Username is already taken!"));
+        }
+
+
+        Role roles = null;
+
+        if (userRequest.getRole() == null) {
+
+            Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            roles =userRole;
+        } else {
+
+            switch (userRequest.getRole()) {
+                case "admin":
+
+                    Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles =adminRole;
+
+                    break;
+                case "teacher":
+                    Role modRole = roleRepository.findByName(ERole.ROLE_TEACHER)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles=modRole;
+
+                    break;
+                default:
+                    Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles=userRole;
+            }
+        }
+
+
+        User userObject = new User(userRequest.getUsername(),
+                userRequest.getFirstname(),
+                userRequest.getLastname(),
+                encoder.encode(userRequest.getPassword()));
+
+        userObject.setRole(roles);
+
+
+
+        userService.saveUser(userObject);
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
     @PutMapping("/update-user")
     public ResponseEntity<Void> updateUser(@RequestParam User user){
         userRepository.save(user);
-
         return ResponseEntity.noContent().build();
     }
 
