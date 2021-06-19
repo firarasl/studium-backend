@@ -6,6 +6,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "roles")
+
 public class Role {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +20,6 @@ public class Role {
 
 	@OneToMany(
 			mappedBy = "role",
-			cascade = CascadeType.ALL,
 			orphanRemoval = true
 	)
 	private List<User> users = new ArrayList<>();
@@ -49,12 +49,4 @@ public class Role {
 		this.name = name;
 	}
 
-	@Override
-	public String toString() {
-		return "Role{" +
-				"id=" + id +
-				", name=" + name +
-				", users=" + users +
-				'}';
-	}
 }

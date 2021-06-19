@@ -5,6 +5,7 @@ import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.repository.ClazzRepository;
 import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

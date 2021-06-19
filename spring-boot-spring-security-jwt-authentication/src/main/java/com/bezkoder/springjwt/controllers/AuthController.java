@@ -59,22 +59,12 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public ResponseEntity<?> authenticateUser( @Valid @RequestBody LoginRequest loginRequest) {
-		System.out.println("---");
-
-		System.out.println(authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())));
-		System.out.println("---");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
 
-		System.out.println(authentication);
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		System.out.println(authentication);
-
 		String jwt = jwtUtils.generateJwtToken(authentication);
-
-		System.out.println(jwt);
 		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority)

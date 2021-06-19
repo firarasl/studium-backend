@@ -24,7 +24,7 @@ public class User {
 
 	@NotBlank
 	@Size(max = 20)
-	@Column(updatable = false, name = "username")
+	@Column(name = "username")
 	private String username;
 
 
@@ -44,7 +44,7 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
-	@ManyToOne( cascade = CascadeType.REMOVE)
+	@ManyToOne
 	private Role role;
 
 
@@ -117,18 +117,7 @@ public class User {
 //	}
 
 
-	@Override
-	public String toString() {
-		return "User{" +
-				"id=" + id +
-				", username='" + username + '\'' +
-				", firstname='" + firstname + '\'' +
-				", lastname='" + lastname + '\'' +
-				", password='" + password + '\'' +
-				", role=" + role +
-				", clazz=" + clazz +
-				'}';
-	}
+
 
 	public Role getRole() {
 		return role;

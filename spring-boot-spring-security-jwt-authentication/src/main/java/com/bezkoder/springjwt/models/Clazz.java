@@ -46,4 +46,49 @@ public class Clazz {
         this.id = id;
         this.name = name;
     }
+
+    public Clazz() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<Subject> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(List<Subject> subjects) {
+        this.subjects = subjects;
+    }
+
+    public List<Test> getTests() {
+        return tests;
+    }
+
+    public void setTests(List<Test> tests) {
+        this.tests = tests;
+    }
+
+    @Override
+    public String toString() {
+        return "Clazz{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", subjects=" + subjects +
+                ", tests=" + tests +
+                '}';
+    }
 }

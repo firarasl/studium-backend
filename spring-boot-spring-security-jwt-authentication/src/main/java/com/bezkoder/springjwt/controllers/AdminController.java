@@ -7,6 +7,7 @@ import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.payload.request.SignupRequest;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
+import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.repository.RoleRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
@@ -109,9 +110,10 @@ public class AdminController {
     }
 
     @PutMapping("/update-user")
-    public ResponseEntity<Void> updateUser(@RequestParam User user){
-        userRepository.save(user);
-        return ResponseEntity.noContent().build();
+public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest,
+                                          @RequestParam Long userId){
+        userService.updateUser(updateRequest, userId);
+        return ResponseEntity.ok(new MessageResponse("User changed successfully!"));
     }
 
 
@@ -128,22 +130,23 @@ public class AdminController {
     @GetMapping("/all-clazzes")
     public ResponseEntity<?> getAllClazzes(){
         return ResponseEntity.ok(clazzService.getAllClazzes());
+
     }
 
 
 
     @PostMapping("/add-clazz")
-    public ResponseEntity<Void> addClazz(@RequestParam String clazzname){
+    public ResponseEntity<?> addClazz(@RequestParam String clazzname){
         clazzService.saveClazz(clazzname);
+        return ResponseEntity.ok(new MessageResponse("added a new class!"));
 
-        return ResponseEntity.noContent().build();
     }
 
 
     @PutMapping("/update-clazzName")
-    public ResponseEntity<Void> updateClazzName(@RequestParam Long id, String name){
+    public ResponseEntity<?> updateClazzName(@RequestParam Long id, String name){
         clazzService.updateClazzName(id, name);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("Changed a class name!"));
     }
 
     //TODO manage subjects

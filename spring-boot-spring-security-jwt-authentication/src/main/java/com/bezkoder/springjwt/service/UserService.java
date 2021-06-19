@@ -1,6 +1,7 @@
 package com.bezkoder.springjwt.service;
 
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,6 @@ public interface UserService {
     void deleteUser(Long id);
 
     void updateMyUser(User updateUser, User currentUser);
+
+    void updateUser(UserUpdateRequest updateRequest, Long userId);
 }

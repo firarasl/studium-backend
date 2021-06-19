@@ -5,11 +5,14 @@ import com.bezkoder.springjwt.models.ERole;
 import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,9 @@ private UserRepository userRepository;
 
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    PasswordEncoder encoder;
+
 
 
     @Override
@@ -84,4 +90,57 @@ private UserRepository userRepository;
             throw new IllegalArgumentException("you're trying to update someone else's data");
         }
     }
+
+    @Override
+    public void updateUser(UserUpdateRequest updateRequest, Long userId) {
+        Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(userId));
+        if(!currentUser.isPresent()){
+            throw new NoSuchElementException("this username doesnt exist!");
+        }
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        System.out.println("1");
+        if (!updateRequest.getFirstname().equals(currentUser.get().getFirstname())
+                && !updateRequest.getFirstname().isEmpty() && updateRequest.getFirstname() != null
+        ) {
+            System.out.println("2");
+
+            currentUser.get().setFirstname(updateRequest.getFirstname());
+        }
+
+        if (!updateRequest.getLastname().equals(currentUser.get().getLastname())
+                && !updateRequest.getLastname().isEmpty() && updateRequest.getFirstname() != null
+        ) {
+            System.out.println("3");
+
+            currentUser.get().setLastname(updateRequest.getLastname());
+        }
+
+        if (!updateRequest.getUsername().equals(currentUser.get().getUsername())
+                && !updateRequest.getUsername().isEmpty() && updateRequest.getFirstname() != null
+        ) {
+            if (userRepository.existsByUsername(updateRequest.getUsername())) {
+                throw new IllegalArgumentException("Error: Username is already taken");
+            }
+            System.out.println("4");
+
+            currentUser.get().setUsername(updateRequest.getUsername());
+        }
+
+        if (!passwordEncoder.matches(currentUser.get().getPassword(),
+                updateRequest.getPassword())
+                && !updateRequest.getPassword().isEmpty() && updateRequest.getFirstname() != null
+        ) {
+            System.out.println("5");
+
+            currentUser.get().setPassword(encoder.encode(updateRequest.getUsername()));
+        }
+        System.out.println("--------------------------------");
+
+        System.out.println(currentUser.get());
+        userRepository.save(currentUser.get());
+
+    }
+
+
 }
