@@ -12,7 +12,7 @@ public interface ClazzService {
 
     void updateClazzName(Long id, String name);
 
-    void updateStudentToClazz(Long clazzId, Long studentId);
+    String updateStudentToClazz(Long clazzId, Long studentId);
 
     void deleteClazz(Long clazzId);
 

@@ -23,7 +23,7 @@ public class Clazz {
     private String name;
 
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToMany()
     @JoinTable(	name = "clazz_subject",
             joinColumns = @JoinColumn(name = "clazz_id"),
             inverseJoinColumns = @JoinColumn(name = "subject_id"))
@@ -31,11 +31,13 @@ public class Clazz {
 
 
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToMany()
     @JoinTable(	name = "clazz_test",
             joinColumns = @JoinColumn(name = "clazz_id"),
             inverseJoinColumns = @JoinColumn(name = "tests_id"))
     private List<Test> tests = new ArrayList<>();
+
+
 
 
     public Clazz(@NotBlank @Size(max = 50) String name) {

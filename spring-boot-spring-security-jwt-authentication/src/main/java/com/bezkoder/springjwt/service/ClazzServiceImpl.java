@@ -1,6 +1,8 @@
 package com.bezkoder.springjwt.service;
 
 import com.bezkoder.springjwt.models.Clazz;
+import com.bezkoder.springjwt.models.ERole;
+import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.repository.ClazzRepository;
 import com.bezkoder.springjwt.repository.SubjectRepository;
@@ -9,6 +11,9 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -19,6 +24,9 @@ public class ClazzServiceImpl implements ClazzService {
 
     @Autowired
     private ClazzRepository clazzRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,48 +58,87 @@ public class ClazzServiceImpl implements ClazzService {
     }
 
     @Override
-    public void updateStudentToClazz(Long clazzId, Long studentId) {
+    @Transactional
 
-        Optional<Clazz> clazz = clazzRepository.findById(clazzId);
-        if (!clazz.isPresent()){
-            throw new NoSuchElementException("this class doesnt exist!");
+
+    public String updateStudentToClazz(Long clazzId, Long studentId) {
+
+
+        Optional<User> user = (Optional<User>) Hibernate.unproxy(userRepository.findById(studentId));
+
+        if (!user.isPresent()){
+            throw new NoSuchElementException("this user doesnt exist!");
         }
 
-        Optional<User> user = userRepository.findById(studentId);
+        if (!user.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+            throw new IllegalArgumentException("this user isnt a student!");
+        }
+        Clazz classObject = new Clazz();
+        if (clazzId != 0){
+            Optional<Clazz> clazz = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findById(clazzId));
+            if (!clazz.isPresent()){
+                throw new NoSuchElementException("this class doesnt exist!");
+            }
 
-        if (user.isPresent()){
-            userRepository.updateSetClazz(studentId, clazzId);
+           classObject  = entityManager.
+                    getReference(Clazz.class, clazz.get().getId() );
+            user.get().setClazz(classObject);
+            entityManager.persist(user.get());
+            return "Class was added to this user!";
         }
         else{
-            throw new NoSuchElementException("this user doesnt exist!");
+            user.get().setClazz(null);
+            userRepository.save(user.get());
+            return "Class was detached from this user!";
         }
 
     }
 
     @Override
+    @Transactional
     public void deleteClazz(Long clazzId) {
         Optional<Clazz> clazz = clazzRepository.findById(clazzId);
         if (!clazz.isPresent()){
             throw new NoSuchElementException("this class doesnt exist!");
         }
-            clazzRepository.deleteById(clazzId);
+
+        List<User> userList = userRepository.findAllByClazz(clazz.get());
+
+        for (int i = 0; i < userList.size(); i++) {
+            userList.get(i).setClazz(null);
+        }
+        userRepository.saveAll(userList);
+
+        entityManager.remove(clazz.get());
+//            clazzRepository.deleteById(clazzId);
     }
 
     @Override
+    @Transactional
     public void manageClazzSubjects(Long clazzId, List<Long> subjectIds) {
-        Optional<Clazz> clazz = clazzRepository.findById(clazzId);
+        Optional<Clazz> clazz = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findById(clazzId));
         if (!clazz.isPresent()){
             throw new NoSuchElementException("this class doesnt exist!");
         }
+List<Subject> subjectList = new ArrayList<>();
+
+
 
         for (int i = 0; i < subjectIds.size(); i++) {
             if (subjectRepository.findById(subjectIds.get(i)).isPresent()){
-                clazzRepository.saveSubject(clazzId,subjectIds.get(i));
+                Subject subject = entityManager.
+                        getReference(Subject.class,subjectIds.get(i) );
+                subjectList.add(subject);
             }
             else{
                 throw new NoSuchElementException("this subject doesnt exist!");
             }
+
         }
+
+        clazz.get().setSubjects(subjectList);
+        entityManager.persist(clazz.get());
+
 
 
     }

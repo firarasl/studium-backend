@@ -23,20 +23,13 @@ public class Subject {
     private String name;
 
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne()
     @JoinColumn(name = "teacher_id")
     private User user;
 
-    @Column(name="is_archieved")
-    private boolean isArchieved;
+    @Column(name="is_archieved",columnDefinition = "boolean default false")
+    private Boolean isArchieved = false;
 
-
-
-//    @ManyToMany(fetch = FetchType.LAZY)
-//	@JoinTable(	name = "class_subject",
-//				joinColumns = @JoinColumn(name = "subject_id"),
-//				inverseJoinColumns = @JoinColumn(name = "class_id"))
-//	private List<Clazz> clazzes = new ArrayList<>();
 
 
     public Long getId() {
@@ -63,11 +56,13 @@ public class Subject {
         this.user = user;
     }
 
-    public boolean isArchieved() {
+    public Boolean isArchieved() {
         return isArchieved;
     }
 
-    public void setArchieved(boolean archieved) {
+    public void setArchieved(Boolean archieved) {
         isArchieved = archieved;
     }
+
+
 }

@@ -12,7 +12,7 @@ public interface ClazzRepository extends JpaRepository<Clazz,Long> {
 
     List<Clazz> findAll();
 
-    @Query(value="INSERT INTO clazz_subject (clazz_id, subject_id) VALUES (:clazzId, :subjectId);\n", nativeQuery=true)
-    void saveSubject(Long clazzId, Long subjectId);
+//    @Query(value="INSERT INTO clazz_subject (clazz_id, subject_id) VALUES (:clazzId, :subjectId);\n", nativeQuery=true)
+//    void saveSubject(Long clazzId, Long subjectId);
 
 }

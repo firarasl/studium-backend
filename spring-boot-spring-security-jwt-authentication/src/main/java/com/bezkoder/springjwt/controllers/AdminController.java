@@ -5,6 +5,7 @@ import com.bezkoder.springjwt.models.Clazz;
 import com.bezkoder.springjwt.models.ERole;
 import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.request.ManageClazzRequest;
 import com.bezkoder.springjwt.payload.request.SignupRequest;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
@@ -20,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
+import java.util.Arrays;
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -151,25 +154,26 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     //TODO manage subjects
 
-    @PostMapping("/manage-class-subjects")
-    public ResponseEntity<Void> manageClazzSubjects(@RequestParam Long clazzId, List<Long> subjectIds){
-        clazzService.manageClazzSubjects(clazzId, subjectIds);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/manage-class-subjects")
+    public ResponseEntity<?> manageClazzSubjects(@RequestBody ManageClazzRequest request){
+        clazzService.manageClazzSubjects(request.getClazzId(), request.getSubjectIds());
+        return ResponseEntity.ok(new MessageResponse("Assigned subjects for the class!"));
     }
 
 
     @PutMapping("/update-student-toclazz")
-    public ResponseEntity<Void> updateClazzName(@RequestParam Long clazzId, Long studentId){
-        clazzService.updateStudentToClazz(clazzId, studentId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> updateStudentClazz(@RequestParam Long clazzId,
+                                                   @RequestParam Long studentId){
+        String response = clazzService.updateStudentToClazz(clazzId, studentId);
+        return ResponseEntity.ok(new MessageResponse(response));
     }
 
 
 
     @DeleteMapping("/delete-class")
-    public ResponseEntity<Void> deleteClazz(@RequestParam Long clazzId){
+    public ResponseEntity<?> deleteClazz(@RequestParam Long clazzId){
         clazzService.deleteClazz(clazzId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("deleted a new class!"));
     }
 
 
@@ -185,17 +189,18 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
 
     @PostMapping("/add-subject")
-    public ResponseEntity<Void> addSubject(@RequestParam String name, Long teacherId){
+    public ResponseEntity<?> addSubject(@RequestParam String name,
+                                        @RequestParam Long teacherId){
         subjectService.saveSubject(name, teacherId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("added a new subject!"));
     }
 
 
 
     @PutMapping("/update-subject")
-    public ResponseEntity<Void> updateSubject(@RequestParam SubjectUpdateRequest subjectUpdateRequest){
+    public ResponseEntity<?> updateSubject(@RequestBody SubjectUpdateRequest subjectUpdateRequest){
         subjectService.updateSubject(subjectUpdateRequest);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("subject was updated !"));
     }
 
 

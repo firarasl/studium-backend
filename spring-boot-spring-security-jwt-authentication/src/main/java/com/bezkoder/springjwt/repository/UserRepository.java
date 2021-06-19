@@ -3,6 +3,7 @@ package com.bezkoder.springjwt.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.bezkoder.springjwt.models.Clazz;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,10 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	List<User> findAll();
 
 
-@Query(value="UPDATE users SET clazz_id= :clazzId WHERE id= :studentId;\n", nativeQuery=true)
-    void updateSetClazz(Long studentId, Long clazzId);
-
-
+    List<User> findAllByClazz(Clazz clazz);
 }
 
 

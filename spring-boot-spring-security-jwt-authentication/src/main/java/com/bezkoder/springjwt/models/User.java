@@ -48,7 +48,7 @@ public class User {
 	private Role role;
 
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Clazz clazz;
 
 
@@ -117,7 +117,13 @@ public class User {
 //	}
 
 
+	public Clazz getClazz() {
+		return clazz;
+	}
 
+	public void setClazz(Clazz clazz) {
+		this.clazz = clazz;
+	}
 
 	public Role getRole() {
 		return role;
