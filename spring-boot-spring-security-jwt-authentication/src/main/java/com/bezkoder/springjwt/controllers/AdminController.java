@@ -199,6 +199,7 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     @PutMapping("/update-subject")
     public ResponseEntity<?> updateSubject(@RequestBody SubjectUpdateRequest subjectUpdateRequest){
+        System.out.println(subjectUpdateRequest);
         subjectService.updateSubject(subjectUpdateRequest);
         return ResponseEntity.ok(new MessageResponse("subject was updated !"));
     }
@@ -207,15 +208,15 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
 
     @PutMapping("/archieve-subject")
-    public ResponseEntity<Void> archieveSubject(@RequestParam Long id){
+    public ResponseEntity<?> archieveSubject(@RequestParam Long id){
 
         subjectService.archieveSubject(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("archieved the subject !"));
     }
 
     @DeleteMapping("/delete-subject")
-    public ResponseEntity<Void> deleteSubject(@RequestParam Long id){
+    public ResponseEntity<?> deleteSubject(@RequestParam Long id){
         subjectService.deleteSubject(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("subject deleted !"));
     }
 }

@@ -83,7 +83,7 @@ private SubjectRepository subjectRepository;
             throw new NoSuchElementException("user isnt a teacher");
         }
 
-        if (teacher.get().getId()!=request.getTeacher_id()
+        if (optionalSubject.get().getUser().getId()!=request.getTeacher_id()
         && request.getTeacher_id()!=null){
             User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
             optionalSubject.get().setUser(teacherObject);
@@ -98,22 +98,26 @@ private SubjectRepository subjectRepository;
     @Override
     public void archieveSubject(Long id) {
 
-        Optional<Subject> optionalSubject = subjectRepository.findById(id);
+        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
             throw new NoSuchElementException("no subject like this");
         }
-        subjectRepository.archieveSubject(id);
+
+        optionalSubject.get().setArchieved(true);
+
+
+        subjectRepository.save(optionalSubject.get());
     }
 
     @Override
     public void deleteSubject(Long id) {
 
-        Optional<Subject> optionalSubject = subjectRepository.findById(id);
+        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
             throw new NoSuchElementException("no subject like this");
         }
 
-        List<Test> testList = testRepository.findAllBySubjectId(id);
+        List<Test> testList = (List<Test>) Hibernate.unproxy(testRepository.findAllBySubjectId(id));
         if (testList.size()==0){
             subjectRepository.deleteById(id);
         }

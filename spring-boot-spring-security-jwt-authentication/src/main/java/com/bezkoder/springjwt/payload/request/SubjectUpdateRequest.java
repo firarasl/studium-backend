@@ -43,4 +43,14 @@ public class SubjectUpdateRequest {
     public void setTeacher_id(Long teacher_id) {
         this.teacher_id = teacher_id;
     }
+
+    @Override
+    public String toString() {
+        return "SubjectUpdateRequest{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", isArchieved=" + isArchieved +
+                ", teacher_id=" + teacher_id +
+                '}';
+    }
 }
