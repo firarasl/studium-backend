@@ -2,8 +2,10 @@ package com.bezkoder.springjwt.service;
 
 import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
+import com.bezkoder.springjwt.payload.response.StudentRespond;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface UserService {
@@ -19,4 +21,6 @@ public interface UserService {
     void updateMyUser(User updateUser, User currentUser);
 
     void updateUser(UserUpdateRequest updateRequest, Long userId);
+
+    List<StudentRespond> getAllStudents();
 }

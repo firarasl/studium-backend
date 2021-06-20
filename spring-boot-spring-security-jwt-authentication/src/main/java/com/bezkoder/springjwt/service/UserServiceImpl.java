@@ -1,13 +1,13 @@
 package com.bezkoder.springjwt.service;
 
 
-import com.bezkoder.springjwt.models.ERole;
-import com.bezkoder.springjwt.models.Role;
-import com.bezkoder.springjwt.models.Subject;
-import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.helper.StudentDataUtil;
+import com.bezkoder.springjwt.models.*;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
+import com.bezkoder.springjwt.payload.response.StudentRespond;
 import com.bezkoder.springjwt.repository.SubjectRepository;
+import com.bezkoder.springjwt.repository.TestResultRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -37,6 +34,8 @@ private UserRepository userRepository;
     @Autowired
     PasswordEncoder encoder;
 
+    @Autowired
+    private TestResultRepository testResultRepository;
 
 
     @Override
@@ -54,6 +53,8 @@ private UserRepository userRepository;
             return user;
         }
     }
+
+    public StudentDataUtil helper;
 
     @Override
     @Transactional
@@ -140,6 +141,26 @@ private UserRepository userRepository;
         System.out.println(currentUser.get());
         userRepository.save(currentUser.get());
 
+    }
+
+    @Override
+    public List<StudentRespond> getAllStudents() {
+
+        List<User> userList = (List<User>) Hibernate.unproxy(userRepository.findAll());
+        List<StudentRespond> studentGPAlist = new ArrayList<>();
+
+        double gpa=0;
+
+        for (int i = 0; i < userList.size(); i++) {
+            if (userList.get(i).getRole().getName().equals(ERole.ROLE_STUDENT)){
+                gpa= helper.getGPA((List<TestResult>) Hibernate.unproxy(testResultRepository.findAllByUser(userList.get(i))));
+                StudentRespond studentRespond = helper.getPayload(userList.get(i), gpa);
+
+                studentGPAlist.add(studentRespond);
+            }
+        }
+
+        return studentGPAlist;
     }
 
 
