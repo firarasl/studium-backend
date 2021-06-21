@@ -17,6 +17,19 @@ public class StudentRespond {
         return id;
     }
 
+    public StudentRespond() {
+    }
+
+    public StudentRespond(Long id, String username, String firstname, String lastname, ERole role, String className, double gpa) {
+        this.id = id;
+        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.role = role;
+        this.className = className;
+        this.gpa = gpa;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

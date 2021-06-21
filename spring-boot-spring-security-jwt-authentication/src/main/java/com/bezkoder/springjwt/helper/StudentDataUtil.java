@@ -3,9 +3,12 @@ package com.bezkoder.springjwt.helper;
 import com.bezkoder.springjwt.models.TestResult;
 import com.bezkoder.springjwt.models.User;
 import com.bezkoder.springjwt.payload.response.StudentRespond;
+import org.springframework.stereotype.Component;
 
+import javax.persistence.Column;
 import java.util.List;
 
+@Component
 public class StudentDataUtil {
 
     public StudentRespond getPayload(User user, double gpa){

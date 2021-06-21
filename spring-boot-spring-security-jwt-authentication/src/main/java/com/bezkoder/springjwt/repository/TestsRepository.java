@@ -1,5 +1,6 @@
 package com.bezkoder.springjwt.repository;
 
+import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.Test;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,10 +13,10 @@ import java.util.List;
 public interface TestsRepository extends JpaRepository<Test,Long> {
 
 
-@Query(value="SELECT * FROM tests WHERE subject_id = :id", nativeQuery=true)
 
     List<Test> findAllBySubjectId(Long id);
 
+    List<Test> findAllBySubject(Subject subject);
 }
 
 

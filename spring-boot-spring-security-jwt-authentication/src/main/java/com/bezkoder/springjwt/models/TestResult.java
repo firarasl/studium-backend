@@ -12,17 +12,17 @@ public class TestResult {
     private Long id;
 
 
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Test test;
 
 
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @OneToOne()
     @JoinColumn(name = "student_id", referencedColumnName = "id")
     private User user;
 
 
     @Column(name="grade")
-    private int grade;
+    private double grade;
 
     public Long getId() {
         return id;
@@ -48,11 +48,11 @@ public class TestResult {
         this.user = user;
     }
 
-    public int getGrade() {
+    public double getGrade() {
         return grade;
     }
 
-    public void setGrade(int grade) {
+    public void setGrade(double grade) {
         this.grade = grade;
     }
 }

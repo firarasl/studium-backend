@@ -1,19 +1,16 @@
 package com.bezkoder.springjwt.service;
 
-import com.bezkoder.springjwt.models.ERole;
-import com.bezkoder.springjwt.models.Subject;
-import com.bezkoder.springjwt.models.Test;
-import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.models.*;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
-import com.bezkoder.springjwt.repository.SubjectRepository;
-import com.bezkoder.springjwt.repository.TestsRepository;
-import com.bezkoder.springjwt.repository.UserRepository;
+import com.bezkoder.springjwt.payload.response.SubjectAndGpaResponse;
+import com.bezkoder.springjwt.repository.*;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -27,9 +24,14 @@ private SubjectRepository subjectRepository;
     @Autowired
     private TestsRepository testRepository;
 
+    @Autowired
+    private TestResultRepository testResultRepository;
+
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ClazzRepository clazzRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -125,4 +127,49 @@ private SubjectRepository subjectRepository;
             throw new IllegalArgumentException("subject has tests");
         }
     }
+
+
+
+
+
+
+    @Override
+    public SubjectAndGpaResponse mySubjectsAndGpa(Long currentUserId) {
+
+        User currentUser = (User) Hibernate.unproxy(userRepository.findById(currentUserId).get());
+
+
+        Optional<Clazz> optionalClazz = Optional.ofNullable(currentUser.getClazz());
+        if (!optionalClazz.isPresent()){
+            throw new NoSuchElementException("This student doesnt have a class");
+        }
+
+//        List<Subject> subjectList= subjectRepository.findAllByClazz(optionalClazz.get());
+        List<Subject> subjectList= optionalClazz.get().getSubjects();
+
+
+        List<TestResult> testResultList = testResultRepository.findAllByUser(currentUser);
+
+        double gpa=0;
+
+        for (int i = 0; i < testResultList.size(); i++) {
+            gpa+=testResultList.get(i).getGrade();
+
+        }
+        SubjectAndGpaResponse response = new SubjectAndGpaResponse();
+
+        gpa=gpa/testResultList.size();
+List<String> subjectNames= new ArrayList<>();
+
+        for (int i = 0; i < subjectList.size(); i++) {
+            subjectNames.add(subjectList.get(i).getName());
+        }
+
+        response.setClazzName(optionalClazz.get().getName());
+        response.setGpa(gpa);
+        response.setSubjectName(subjectNames);
+        return response;
+    }
+
+
 }

@@ -1,19 +1,27 @@
 package com.bezkoder.springjwt.controllers;
 
 
+import com.bezkoder.springjwt.payload.request.CSV;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.service.TestService;
 import com.bezkoder.springjwt.service.UserService;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -90,4 +98,32 @@ public class TeacherController {
     public ResponseEntity<?> getAllStudentsOfTest(@RequestParam @NotEmpty @NotNull Long id){
         return ResponseEntity.ok(testService.getAllStudentsOfTest(id));
     }
+
+
+    @PutMapping("change-test-grade")
+    public ResponseEntity<?> changeTestGrade(@RequestParam @NotEmpty @NotNull Long testId,
+                                             @RequestParam @NotEmpty @NotNull Long studentId,
+                                             @RequestParam @NotNull @NotEmpty double grade){
+        String response = testService.changeTestGrade(testId, studentId, grade);
+        return ResponseEntity.ok(response);
+    }
+
+//
+//    @PostMapping("/upload-csv-file")
+//    public ResponseEntity<Void> uploadCSVFile(@RequestParam("file") MultipartFile file) {
+//
+//        testService.parseCSV(file);
+//
+//       return ResponseEntity.noContent().build();
+//
+//    }
+
+
+    @DeleteMapping("delete-test")
+    public ResponseEntity<?> deleteTest(@RequestParam @NotEmpty @NotNull Long testId){
+        testService.deleteTest(testId);
+        return ResponseEntity.ok("Deleted the test!");
+    }
+
+
 }

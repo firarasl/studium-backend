@@ -30,7 +30,7 @@ public class Test {
 
 
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne()
     private Subject subject;
 
 

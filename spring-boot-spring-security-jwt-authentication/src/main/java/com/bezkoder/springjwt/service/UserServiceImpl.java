@@ -31,6 +31,7 @@ private UserRepository userRepository;
 
     @Autowired
     private EntityManager entityManager;
+
     @Autowired
     PasswordEncoder encoder;
 
@@ -54,6 +55,7 @@ private UserRepository userRepository;
         }
     }
 
+    @Autowired
     public StudentDataUtil helper;
 
     @Override
