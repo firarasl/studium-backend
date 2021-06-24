@@ -4,6 +4,7 @@ import com.bezkoder.springjwt.models.Clazz;
 import com.bezkoder.springjwt.models.ERole;
 import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.response.ClazzResponse;
 import com.bezkoder.springjwt.repository.ClazzRepository;
 import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
@@ -36,7 +37,8 @@ public class ClazzServiceImpl implements ClazzService {
 
     @Override
     public List<Clazz> getAllClazzes() {
-        return clazzRepository.findAll();
+        List<Clazz> list = (List<Clazz>) Hibernate.unproxy(clazzRepository.findAll());
+        return list;
     }
 
     @Override
@@ -61,10 +63,10 @@ public class ClazzServiceImpl implements ClazzService {
     @Transactional
 
 
-    public String updateStudentToClazz(Long clazzId, Long studentId) {
+    public String updateStudentToClazz(Long clazzId, String username) {
 
 
-        Optional<User> user = (Optional<User>) Hibernate.unproxy(userRepository.findById(studentId));
+        Optional<User> user = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(username));
 
         if (!user.isPresent()){
             throw new NoSuchElementException("this user doesnt exist!");
@@ -141,5 +143,25 @@ List<Subject> subjectList = new ArrayList<>();
 
 
 
+    }
+
+    @Override
+    public ClazzResponse getClazzById(Long clazzId) {
+        Optional<Clazz> clazz = clazzRepository.findById(clazzId);
+        if (!clazz.isPresent()){
+            throw new NoSuchElementException("this class doesnt exist!");
+        }
+
+        List<User> studentList = userRepository.findAllByClazz(clazz.get());
+
+        List<Subject> subjectList = clazz.get().getSubjects();
+
+        ClazzResponse response = new ClazzResponse();
+        response.setId(clazzId);
+        response.setName(clazz.get().getName());
+        response.setSubjectList(subjectList);
+        response.setStudentList(studentList);
+
+        return response;
     }
 }

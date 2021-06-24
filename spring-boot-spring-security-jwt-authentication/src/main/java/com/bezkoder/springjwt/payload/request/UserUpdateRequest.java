@@ -5,22 +5,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-public class UserUpdateRequest {
+public class
+UserUpdateRequest {
     @NotBlank
-    @Size(max = 20, min =4 )
     private String username;
 
+    private Long id;
 
     @NotBlank
-    @Size(max = 20, min =4 )
     private String firstname;
 
     @NotBlank
-    @Size(max = 20, min =4 )
     private String lastname;
 
     @NotBlank
-    @Size(max = 120, min =4 )
     private String password;
 
     public String getUsername() {
@@ -55,6 +53,13 @@ public class UserUpdateRequest {
         this.password = password;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public String toString() {

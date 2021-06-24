@@ -1,6 +1,7 @@
 package com.bezkoder.springjwt.service;
 
 import com.bezkoder.springjwt.models.Clazz;
+import com.bezkoder.springjwt.payload.response.ClazzResponse;
 
 import java.util.List;
 
@@ -12,9 +13,11 @@ public interface ClazzService {
 
     void updateClazzName(Long id, String name);
 
-    String updateStudentToClazz(Long clazzId, Long studentId);
+    String updateStudentToClazz(Long clazzId, String username);
 
     void deleteClazz(Long clazzId);
 
     void manageClazzSubjects(Long clazzId, List<Long> subjectIds);
+
+    ClazzResponse getClazzById(Long clazzId);
 }

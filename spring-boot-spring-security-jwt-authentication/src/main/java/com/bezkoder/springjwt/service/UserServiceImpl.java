@@ -5,6 +5,7 @@ import com.bezkoder.springjwt.helper.StudentDataUtil;
 import com.bezkoder.springjwt.models.*;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
+import com.bezkoder.springjwt.payload.response.MyProfile;
 import com.bezkoder.springjwt.payload.response.StudentRespond;
 import com.bezkoder.springjwt.repository.SubjectRepository;
 import com.bezkoder.springjwt.repository.TestResultRepository;
@@ -40,6 +41,7 @@ private UserRepository userRepository;
 
 
     @Override
+    @Transactional
     public List<User> getAllUsers() {
         List<User> userList = (List<User>) Hibernate.unproxy(userRepository.findAll());
         return userList;
@@ -72,75 +74,106 @@ private UserRepository userRepository;
     public void deleteUser(Long id) {
         Optional<User> currentUser = userRepository.findById(id);
         if(!currentUser.isPresent()){
-            throw new NoSuchElementException("this username doesnt exist!");
+            throw new NoSuchElementException("this user doesnt exist!");
         }
 
         if (currentUser.get().getRole().getName() == ERole.ROLE_TEACHER){
-            if (subjectRepository.findAllByTeacherIdAndArchieved(id, true).size()!=0){
-                throw new IllegalArgumentException("this user has assigned active subjects");
+            if (subjectRepository.findAllByTeacherIdAndArchieved(id, false).size()>0){
+                throw new IllegalArgumentException("this teacher has assigned active subjects");
             }
+
+            List<Subject> teachersSubjects = (List<Subject>) Hibernate.unproxy(subjectRepository.findAllByUser(currentUser.get()));
+            for (int i = 0; i < teachersSubjects.size(); i++) {
+                teachersSubjects.get(i).setUser(null);
+            }
+        }else if(currentUser.get().getRole().getName() == ERole.ROLE_STUDENT){
+            List<TestResult> testResultList = (List<TestResult>) Hibernate.unproxy(testResultRepository.findAllByUser(currentUser.get()));
+            testResultRepository.deleteAll(testResultList);
         }
 
         userRepository.deleteById(id);
     }
 
-    @Override
-    public void updateMyUser(User updateUser, User currentUser) {
-        if (updateUser.getId()==currentUser.getId()){
-            userRepository.save(updateUser);
-        }
-        else {
-            throw new IllegalArgumentException("you're trying to update someone else's data");
-        }
-    }
+//    @Override
+//    public void updateMyUser(UserUpdateRequest updateUser, Long currentId) {
+//
+//        Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(currentId));
+//        if(!optionalUser.isPresent()){
+//            throw new NoSuchElementException("this username doesnt exist!");
+//        }
+//
+//        if (!updateUser.getUsername().isEmpty() &&
+//                updateUser.getUsername()!=null &&
+//                !updateUser.getUsername().equals(optionalUser.get().getUsername())){
+//            optionalUser.get().setUsername(updateUser.getUsername());
+//        }
+//        if (!updateUser.getFirstname().isEmpty() &&
+//                updateUser.getFirstname()!=null &&
+//                !updateUser.getFirstname().equals(optionalUser.get().getFirstname())){
+//            optionalUser.get().setFirstname(updateUser.getFirstname());
+//        }
+//        if (!updateUser.getLastname().isEmpty() &&
+//                updateUser.getLastname()!=null &&
+//                !updateUser.getLastname().equals(optionalUser.get().getLastname())){
+//            optionalUser.get().setLastname(updateUser.getLastname());
+//        }
+//
+//        if (!updateUser.getPassword().isEmpty() &&
+//                updateUser.getPassword()!=null &&
+//                !updateUser.getLastname().equals(optionalUser.get().getLastname())){
+//            optionalUser.get().setLastname(updateUser.getLastname());
+//        }
+//
+//        if (updateUser.getId()==currentUser.getId()){
+//            userRepository.save(updateUser);
+//        }
+//        else {
+//            throw new IllegalArgumentException("you're trying to update someone else's data");
+//        }
+//    }
 
     @Override
     public void updateUser(UserUpdateRequest updateRequest, Long userId) {
         Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(userId));
         if(!currentUser.isPresent()){
-            throw new NoSuchElementException("this username doesnt exist!");
+            throw new NoSuchElementException("this user doesnt exist!");
+        }
+
+        if(updateRequest.getFirstname() == null && updateRequest.getLastname() == null
+              && updateRequest.getUsername() == null && updateRequest.getPassword() == null
+        ){
+            throw new IllegalArgumentException("Error: Edit something");
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        System.out.println("1");
-        if (!updateRequest.getFirstname().equals(currentUser.get().getFirstname())
-                && !updateRequest.getFirstname().isEmpty() && updateRequest.getFirstname() != null
+        if (updateRequest.getFirstname() != null
+                && !updateRequest.getFirstname().equals(currentUser.get().getFirstname())
         ) {
-            System.out.println("2");
 
             currentUser.get().setFirstname(updateRequest.getFirstname());
         }
 
-        if (!updateRequest.getLastname().equals(currentUser.get().getLastname())
-                && !updateRequest.getLastname().isEmpty() && updateRequest.getFirstname() != null
+        if (updateRequest.getLastname() != null && !updateRequest.getLastname().equals(currentUser.get().getLastname())
         ) {
-            System.out.println("3");
 
             currentUser.get().setLastname(updateRequest.getLastname());
         }
 
-        if (!updateRequest.getUsername().equals(currentUser.get().getUsername())
-                && !updateRequest.getUsername().isEmpty() && updateRequest.getFirstname() != null
+        if (updateRequest.getUsername() != null && !updateRequest.getUsername().equals(currentUser.get().getUsername())
         ) {
             if (userRepository.existsByUsername(updateRequest.getUsername())) {
                 throw new IllegalArgumentException("Error: Username is already taken");
             }
-            System.out.println("4");
 
             currentUser.get().setUsername(updateRequest.getUsername());
         }
 
-        if (!passwordEncoder.matches(currentUser.get().getPassword(),
+        if (updateRequest.getPassword() != null && !passwordEncoder.matches(currentUser.get().getPassword(),
                 updateRequest.getPassword())
-                && !updateRequest.getPassword().isEmpty() && updateRequest.getFirstname() != null
         ) {
-            System.out.println("5");
 
             currentUser.get().setPassword(encoder.encode(updateRequest.getUsername()));
         }
-        System.out.println("--------------------------------");
-
-        System.out.println(currentUser.get());
         userRepository.save(currentUser.get());
 
     }
@@ -163,6 +196,24 @@ private UserRepository userRepository;
         }
 
         return studentGPAlist;
+    }
+
+    @Override
+    public User getMyData(Long id) {
+        Optional<User> user= userRepository.findById(id);
+        if(!user.isPresent()){
+            throw new NoSuchElementException("this username doesnt exist!");
+        }
+
+//        MyProfile myProfile = new MyProfile();
+//        myProfile.setFirstname(user.get().getFirstname());
+//        myProfile.setLastname(user.get().getLastname());
+//        myProfile.setUsername(user.get().getUsername());
+//        myProfile.setId(user.get().getId());
+//        myProfile.setRole(user.get().getRole().getName());
+
+
+        return user.get();
     }
 
 

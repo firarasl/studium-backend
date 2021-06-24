@@ -48,7 +48,7 @@ public class User {
 	private Role role;
 
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne()
 	private Clazz clazz;
 
 

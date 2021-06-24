@@ -109,21 +109,22 @@ public class AdminController {
 
 
         userService.saveUser(userObject);
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.ok(new MessageResponse("User was added successfully!"));
     }
 
     @PutMapping("/update-user")
-public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest,
-                                          @RequestParam Long userId){
-        userService.updateUser(updateRequest, userId);
+public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
+                                          ){
+        userService.updateUser(updateRequest, updateRequest.getId());
         return ResponseEntity.ok(new MessageResponse("User changed successfully!"));
     }
 
 
     @DeleteMapping("delete-user")
-    public ResponseEntity<Void> deleteUser(@RequestParam Long id){
+    public ResponseEntity<?> deleteUser(@RequestParam Long id){
+        System.out.println(id);
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("User was deleted successfully!"));
     }
 
 
@@ -133,10 +134,12 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     @GetMapping("/all-clazzes")
     public ResponseEntity<?> getAllClazzes(){
         return ResponseEntity.ok(clazzService.getAllClazzes());
-
     }
 
-
+    @GetMapping("/clazz/{id}")
+    public ResponseEntity<?> getClazzById(@PathVariable Long id){
+        return ResponseEntity.ok(clazzService.getClazzById(id));
+    }
 
     @PostMapping("/add-clazz")
     public ResponseEntity<?> addClazz(@RequestParam String clazzname){
@@ -147,9 +150,10 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
 
     @PutMapping("/update-clazzName")
-    public ResponseEntity<?> updateClazzName(@RequestParam Long id, String name){
+    public ResponseEntity<?> updateClazzName(@RequestParam Long id,
+                                             @RequestParam String name){
         clazzService.updateClazzName(id, name);
-        return ResponseEntity.ok(new MessageResponse("Changed a class name!"));
+        return ResponseEntity.ok(new MessageResponse("You changed a class name!"));
     }
 
     //TODO manage subjects
@@ -163,8 +167,8 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     @PutMapping("/update-student-toclazz")
     public ResponseEntity<?> updateStudentClazz(@RequestParam Long clazzId,
-                                                   @RequestParam Long studentId){
-        String response = clazzService.updateStudentToClazz(clazzId, studentId);
+                                                   @RequestParam String username){
+        String response = clazzService.updateStudentToClazz(clazzId, username);
         return ResponseEntity.ok(new MessageResponse(response));
     }
 

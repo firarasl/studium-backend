@@ -1,5 +1,7 @@
 package com.bezkoder.springjwt.models;
 
+import org.hibernate.annotations.Cascade;
+
 import javax.persistence.*;
 
 @Entity
@@ -12,11 +14,12 @@ public class TestResult {
     private Long id;
 
 
-    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne()
     private Test test;
 
 
     @OneToOne()
+
     @JoinColumn(name = "student_id", referencedColumnName = "id")
     private User user;
 

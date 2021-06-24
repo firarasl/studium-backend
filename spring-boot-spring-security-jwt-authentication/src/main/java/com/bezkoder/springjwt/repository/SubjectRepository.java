@@ -3,6 +3,7 @@ package com.bezkoder.springjwt.repository;
 
 import com.bezkoder.springjwt.models.Clazz;
 import com.bezkoder.springjwt.models.Subject;
+import com.bezkoder.springjwt.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,8 @@ public interface SubjectRepository extends JpaRepository<Subject,Long> {
 
 @Query(value="SELECT * FROM subject WHERE teacher_id = :id AND is_archieved= :isArchieved \n", nativeQuery=true)
     List<Subject> findAllByTeacherIdAndArchieved(Long id, boolean isArchieved);
+
+    List<Subject> findAllByUser(User teacher);
 
 //@Query(value="INSERT INTO subject (name, teacher_id, is_archieved) VALUES (:name, :teacherId, false );\n", nativeQuery=true)
 //    void saveNewSubject(String name, Long teacherId);
