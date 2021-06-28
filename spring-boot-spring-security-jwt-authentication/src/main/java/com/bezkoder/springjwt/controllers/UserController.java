@@ -1,7 +1,9 @@
 package com.bezkoder.springjwt.controllers;
 
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.payload.request.MessageRequest;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
+import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.security.UserDetailsImpl;
 import com.bezkoder.springjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,5 +59,43 @@ public class UserController {
                 .body(userService.getMyData(currentUser.getId()));
     }
 
+
+    @PostMapping("/send-message")
+    public ResponseEntity<?> getUserByUsername(@RequestBody MessageRequest request){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+        userService.sendMessage(request, currentUser.getId());
+        return ResponseEntity.ok(new MessageResponse("message sent !"));
+    }
+
+    @GetMapping("/my-unread-msgs")
+    public ResponseEntity<?> getMyUnreadMessages(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+        ;
+        return ResponseEntity.ok().body(userService.getMyUnreadMessages( currentUser.getId()));
+    }
+
+
+    @GetMapping("/my-inbox")
+    public ResponseEntity<?> myInbox(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+
+        return ResponseEntity.ok().body(userService.myInbox( currentUser.getId()));
+    }
+
+
+    @GetMapping("/open-message")
+    public ResponseEntity<?> openMessage(@RequestParam Long messageId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+
+        return ResponseEntity.ok().body(userService.openMessage( currentUser.getId(), messageId));
+    }
 
 }

@@ -3,13 +3,13 @@ package com.bezkoder.springjwt.service;
 
 import com.bezkoder.springjwt.helper.StudentDataUtil;
 import com.bezkoder.springjwt.models.*;
+import com.bezkoder.springjwt.payload.request.MessageRequest;
+import com.bezkoder.springjwt.payload.request.SignupRequest;
 import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.payload.response.MyProfile;
 import com.bezkoder.springjwt.payload.response.StudentRespond;
-import com.bezkoder.springjwt.repository.SubjectRepository;
-import com.bezkoder.springjwt.repository.TestResultRepository;
-import com.bezkoder.springjwt.repository.UserRepository;
+import com.bezkoder.springjwt.repository.*;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,6 +30,10 @@ private UserRepository userRepository;
     @Autowired
     private SubjectRepository subjectRepository;
 
+
+    @Autowired
+    private ClazzRepository clazzRepository;
+
     @Autowired
     private EntityManager entityManager;
 
@@ -38,6 +42,10 @@ private UserRepository userRepository;
 
     @Autowired
     private TestResultRepository testResultRepository;
+    @Autowired
+    private MessageRepository messageRepository;
+    @Autowired
+    private RoleRepository roleRepository;
 
 
     @Override
@@ -62,7 +70,53 @@ private UserRepository userRepository;
 
     @Override
     @Transactional
-    public void saveUser(User user) {
+    public void saveUser(SignupRequest userRequest) {
+
+        if (userRepository.existsByUsername(userRequest.getUsername())) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+
+
+        Role roles = null;
+
+        if (userRequest.getRole() == null) {
+
+            Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            roles =userRole;
+        } else {
+
+            switch (userRequest.getRole()) {
+                case "admin":
+
+                    Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles =adminRole;
+
+                    break;
+                case "teacher":
+                    Role modRole = roleRepository.findByName(ERole.ROLE_TEACHER)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles=modRole;
+
+                    break;
+                default:
+                    Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    roles=userRole;
+            }
+        }
+
+
+        User user = new User(userRequest.getUsername(),
+                userRequest.getFirstname(),
+                userRequest.getLastname(),
+                encoder.encode(userRequest.getPassword()));
+
+        user.setRole(roles);
+
+
+
 
         Role role = entityManager.getReference(Role.class, user.getRole().getId());
         user.setRole(role);
@@ -179,10 +233,37 @@ private UserRepository userRepository;
     }
 
     @Override
-    public List<StudentRespond> getAllStudents() {
+    public Set<StudentRespond> getAllStudents(Long teacherId) {
 
-        List<User> userList = (List<User>) Hibernate.unproxy(userRepository.findAll());
-        List<StudentRespond> studentGPAlist = new ArrayList<>();
+        Optional<User> currentTeacher = (Optional<User>) Hibernate.unproxy(userRepository.findById(teacherId));
+        if(!currentTeacher.isPresent()){
+            throw new NoSuchElementException("this user doesnt exist!");
+        }
+
+        List<Subject> subjectList = subjectRepository.findAllByUser(currentTeacher.get());
+
+        List<User> userListAll = userRepository.findAll();
+
+        Set<Clazz> clazzList = new HashSet<>();
+
+        for (int i = 0; i < userListAll.size(); i++) {
+            if(userListAll.get(i).getRole().getName().equals(ERole.ROLE_STUDENT)
+                && userListAll.get(i).getClazz() !=null &&
+                    !Collections.disjoint(userListAll.get(i).getClazz().getSubjects(), subjectList)){
+                clazzList.add(userListAll.get(i).getClazz());
+            }
+        }
+
+
+
+        List<User> userList = new ArrayList<>();
+
+        for(Clazz clazz : clazzList){
+            userList.addAll(userRepository.findAllByClazz(clazz));
+        }
+
+
+        Set<StudentRespond> studentGPAlist = new HashSet<>();
 
         double gpa=0;
 
@@ -194,7 +275,7 @@ private UserRepository userRepository;
                 studentGPAlist.add(studentRespond);
             }
         }
-
+        System.out.println(studentGPAlist);
         return studentGPAlist;
     }
 
@@ -214,6 +295,102 @@ private UserRepository userRepository;
 
 
         return user.get();
+    }
+
+    @Override
+    public void sendMessage(MessageRequest request, Long currentUserId) {
+        Optional<User> user= userRepository.findById(currentUserId);
+        if(!user.isPresent()){
+            throw new NoSuchElementException("this sender doesnt exist!");
+        }
+
+
+
+        Optional<User> user2= userRepository.findByUsername(request.getReceiverUsername());
+        if(!user2.isPresent()){
+            throw new NoSuchElementException("this receiver doesnt exist!");
+        }
+
+        if(user.get().getUsername().equals(user2.get().getUsername())) {
+            throw new IllegalArgumentException("you cant send message to yourself!");
+        }
+
+        if(user.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+            List<Subject> firstSubjects = user.get().getClazz().getSubjects();
+            if(user2.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+                List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
+                if (!Collections.disjoint(firstSubjects, secondSubjects)){
+                    throw new IllegalArgumentException("as a student you may send message to only ur collegues!");
+                }
+            }
+        }
+        else if(user.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
+//            all subjects of a teacher
+            List<Subject> subjectList = subjectRepository.findAllByTeacherIdAndArchieved(user.get().getId(), true);
+            // all subjects of a receiver student
+
+            if(user2.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+
+                List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
+
+            if (!Collections.disjoint(subjectList, secondSubjects)){
+                throw new IllegalArgumentException("as a teacher you may send message to only ur students!");
+            }}
+        }
+
+        Message message = new Message();
+        message.setSender(user.get());
+
+        message.setReceiver(user2.get());
+        message.setText(request.getText());
+messageRepository.save(message);
+
+    }
+
+    @Override
+    public int getMyUnreadMessages(Long id) {
+
+        Optional<User> user= userRepository.findById(id);
+        if(!user.isPresent()){
+            throw new NoSuchElementException("this sender doesnt exist!");
+        }
+
+        int count = messageRepository.countByReceiverAndIsRead(user.get().getId(), false);
+
+
+        return count;
+    }
+
+    @Override
+    public List<Message> myInbox(Long id) {
+        Optional<User> user= userRepository.findById(id);
+        if(!user.isPresent()){
+            throw new NoSuchElementException("this sender doesnt exist!");
+        }
+        List<Message> messages = messageRepository.findAllByReceiver(user.get());
+
+
+        return messages;
+    }
+
+    @Override
+    public Message openMessage(Long id, Long messageId) {
+        Optional<User> user= userRepository.findById(id);
+        if(!user.isPresent()){
+            throw new NoSuchElementException("this sender doesnt exist!");
+        }
+        Optional<Message> message= messageRepository.findById(messageId);
+        if(!message.isPresent()){
+            throw new NoSuchElementException("this message doesnt exist!");
+        }
+
+        if(!message.get().getReceiver().equals(user.get())){
+            throw new IllegalArgumentException("Not a message for you");
+        }
+
+        message.get().setRead(true);
+        messageRepository.save(message.get());
+        return message.get();
     }
 
 

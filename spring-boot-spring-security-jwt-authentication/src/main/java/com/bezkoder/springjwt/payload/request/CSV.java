@@ -1,58 +1,52 @@
 package com.bezkoder.springjwt.payload.request;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
 
-import java.sql.Timestamp;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 
 public class CSV {
-    @CsvBindByName
-    private String testName;
+    @NotEmpty
+    @NotNull
+    @CsvBindByPosition(position = 0)
+    private String username;
 
-    @CsvBindByName
-    private String subjectName;
+    @NotEmpty
+    @NotNull
 
-    @CsvBindByName
-    private String studentUsername;
+    @CsvBindByPosition(position = 1)
+    private Long testId;
 
-    @CsvBindByName
-    private Timestamp date;
-
-
-    @CsvBindByName
+    @NotEmpty
+    @NotNull
+    @CsvBindByPosition(position = 2)
     private double grade;
 
     public CSV() {
     }
 
-    public CSV(String testName, String subjectName, String studentUsername, double grade) {
-        this.testName = testName;
-        this.subjectName = subjectName;
-        this.studentUsername = studentUsername;
+    public CSV(String username, Long testId, double grade) {
+        this.username = username;
+        this.testId = testId;
         this.grade = grade;
     }
 
-    public String getTestName() {
-        return testName;
+    public Long getTestId() {
+        return testId;
     }
 
-    public void setTestName(String testName) {
-        this.testName = testName;
+    public void setTestId(Long testId) {
+        this.testId = testId;
     }
 
-    public String getSubjectName() {
-        return subjectName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setSubjectName(String subjectName) {
-        this.subjectName = subjectName;
-    }
-
-    public String getStudentUsername() {
-        return studentUsername;
-    }
-
-    public void setStudentUsername(String studentUsername) {
-        this.studentUsername = studentUsername;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public double getGrade() {
@@ -61,5 +55,14 @@ public class CSV {
 
     public void setGrade(double grade) {
         this.grade = grade;
+    }
+
+    @Override
+    public String toString() {
+        return "CSV{" +
+                "testId=" + testId +
+                ", username='" + username + '\'' +
+                ", grade=" + grade +
+                '}';
     }
 }

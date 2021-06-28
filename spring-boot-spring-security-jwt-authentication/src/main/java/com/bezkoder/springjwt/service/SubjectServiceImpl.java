@@ -1,5 +1,6 @@
 package com.bezkoder.springjwt.service;
 
+import com.bezkoder.springjwt.helper.StudentDataUtil;
 import com.bezkoder.springjwt.models.*;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
 import com.bezkoder.springjwt.payload.response.SubjectAndGpaResponse;
@@ -10,10 +11,8 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.nio.channels.IllegalChannelGroupException;
+import java.util.*;
 
 @Service
 public class SubjectServiceImpl implements SubjectService {
@@ -26,6 +25,12 @@ private SubjectRepository subjectRepository;
 
     @Autowired
     private TestResultRepository testResultRepository;
+
+    @Autowired
+    private StudentDataUtil studentDataUtil;
+
+
+
 
 
     @Autowired
@@ -45,9 +50,9 @@ private SubjectRepository subjectRepository;
     @Override
     @Transactional
 
-    public void saveSubject(String name, Long teacherId) {
+    public void saveSubject(String name, String teacherName) {
 
-        Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findById(teacherId));
+        Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(teacherName));
 
         if (!teacher.isPresent()){
             throw new NoSuchElementException("this user does not exist");
@@ -56,7 +61,7 @@ private SubjectRepository subjectRepository;
             throw new NoSuchElementException("this user isnt a teacher");
         }
 
-        User teacherObject = entityManager.getReference(User.class, teacherId);
+        User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
         Subject subject = new Subject();
         subject.setName(name);
         subject.setUser(teacherObject);
@@ -76,24 +81,37 @@ private SubjectRepository subjectRepository;
             throw new IllegalArgumentException("subject is archieved");
         }
 
+if ((request.getTeacherName()==null || request.getTeacherName().isEmpty() )
+&& (request.getName()==null || request.getName().isEmpty()  )){
+    throw new IllegalArgumentException("no data to change");
+}
 
-        Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findById(request.getTeacher_id()));
-        if (!teacher.isPresent()){
-            throw new NoSuchElementException("no user like this");
-        }
-        else if(!teacher.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
-            throw new NoSuchElementException("user isnt a teacher");
-        }
+if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
 
-        if (optionalSubject.get().getUser().getId()!=request.getTeacher_id()
-        && request.getTeacher_id()!=null){
-            User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
-            optionalSubject.get().setUser(teacherObject);
-        }
-            if (!optionalSubject.get().getName().equals(request.getName()) &&
-                    !request.getName().isEmpty() && request.getName()!=null){
+    Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(request.getTeacherName()));
+    if (!teacher.isPresent()){
+        throw new NoSuchElementException("no user like this");
+    }
+    else if(!teacher.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
+        throw new NoSuchElementException("user isnt a teacher");
+    }
+
+    if (!optionalSubject.get().getUser().getUsername().equals(request.getTeacherName()) ){
+        User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
+        optionalSubject.get().setUser(teacherObject);
+    }else{
+        throw new IllegalArgumentException("assigning to the same teacher");
+    }
+}
+        if( request.getName()!=null && !request.getName().isEmpty() ){
+            if (!optionalSubject.get().getName().equals(request.getName())){
                 optionalSubject.get().setName(request.getName());
+            }else{
+                throw new IllegalArgumentException("assigning to the same name");
             }
+        }
+
+
             entityManager.persist(optionalSubject.get());
     }
 
@@ -144,31 +162,51 @@ private SubjectRepository subjectRepository;
             throw new NoSuchElementException("This student doesnt have a class");
         }
 
-//        List<Subject> subjectList= subjectRepository.findAllByClazz(optionalClazz.get());
         List<Subject> subjectList= optionalClazz.get().getSubjects();
 
+        SubjectAndGpaResponse answer = new SubjectAndGpaResponse();
+        answer.setClazzName(optionalClazz.get().getName());
 
-        List<TestResult> testResultList = testResultRepository.findAllByUser(currentUser);
+        Map<Double, Subject> answerSubject= new HashMap<>();
 
-        double gpa=0;
-
-        for (int i = 0; i < testResultList.size(); i++) {
-            gpa+=testResultList.get(i).getGrade();
-
-        }
-        SubjectAndGpaResponse response = new SubjectAndGpaResponse();
-
-        gpa=gpa/testResultList.size();
-List<String> subjectNames= new ArrayList<>();
 
         for (int i = 0; i < subjectList.size(); i++) {
-            subjectNames.add(subjectList.get(i).getName());
+            double gpa = 0;
+            List<Test> testList= testRepository.findAllBySubject(subjectList.get(i));
+            List<TestResult> testResultList= new ArrayList<>();
+            for (int u = 0; u < testList.size(); u++) {
+                testResultList.addAll(testResultRepository.findAllByUserAndTest(currentUser, testList.get(u)));
+            }
+            gpa= studentDataUtil.getGPA(testResultList);
+
+            answerSubject.put(gpa, subjectList.get(i));
+        }
+        answer.setSubjects(answerSubject);
+
+return answer;
+    }
+
+    @Override
+    public Subject getSubjectById(Long id) {
+
+        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
+        if (!optionalSubject.isPresent()){
+            throw new NoSuchElementException("This subject doesnt have a class");
+        }
+        return optionalSubject.get();
+    }
+
+    @Override
+    public List<Subject> getAllSubejectsByTeacher(Long id) {
+
+        Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(id));
+        if (!optionalUser.isPresent()){
+            throw new NoSuchElementException("This user doesnt have a class");
         }
 
-        response.setClazzName(optionalClazz.get().getName());
-        response.setGpa(gpa);
-        response.setSubjectName(subjectNames);
-        return response;
+        List<Subject> subjectList = subjectRepository.findAllByUser(optionalUser.get());
+
+        return subjectList;
     }
 
 

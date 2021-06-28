@@ -7,9 +7,8 @@ public class SubjectUpdateRequest {
 
     private String name;
 
-    private boolean isArchieved;
 
-    private Long teacher_id;
+    private String teacherName;
 
 
     public Long getId() {
@@ -28,20 +27,13 @@ public class SubjectUpdateRequest {
         this.name = name;
     }
 
-    public boolean isArchieved() {
-        return isArchieved;
+
+    public String getTeacherName() {
+        return teacherName;
     }
 
-    public void setArchieved(boolean archieved) {
-        isArchieved = archieved;
-    }
-
-    public Long getTeacher_id() {
-        return teacher_id;
-    }
-
-    public void setTeacher_id(Long teacher_id) {
-        this.teacher_id = teacher_id;
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
     }
 
     @Override
@@ -49,8 +41,7 @@ public class SubjectUpdateRequest {
         return "SubjectUpdateRequest{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", isArchieved=" + isArchieved +
-                ", teacher_id=" + teacher_id +
+                ", teacher_name=" + teacherName +
                 '}';
     }
 }

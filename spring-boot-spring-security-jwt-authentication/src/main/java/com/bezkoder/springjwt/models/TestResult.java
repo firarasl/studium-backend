@@ -1,6 +1,5 @@
 package com.bezkoder.springjwt.models;
 
-import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
 

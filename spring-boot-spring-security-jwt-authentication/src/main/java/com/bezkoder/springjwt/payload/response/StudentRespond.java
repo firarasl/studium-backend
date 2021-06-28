@@ -81,4 +81,18 @@ public class StudentRespond {
     public void setGpa(double gpa) {
         this.gpa = gpa;
     }
+
+
+    @Override
+    public String toString() {
+        return "StudentRespond{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", role=" + role +
+                ", className='" + className + '\'' +
+                ", gpa=" + gpa +
+                '}';
+    }
 }

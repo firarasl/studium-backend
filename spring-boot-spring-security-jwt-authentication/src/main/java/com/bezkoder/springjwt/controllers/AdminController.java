@@ -59,56 +59,7 @@ public class AdminController {
 
     @PostMapping("/add-user")
     public ResponseEntity<?> addUser(@RequestBody SignupRequest userRequest){
-        System.out.println(userRequest);
-
-        if (userRepository.existsByUsername(userRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
-        }
-
-
-        Role roles = null;
-
-        if (userRequest.getRole() == null) {
-
-            Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles =userRole;
-        } else {
-
-            switch (userRequest.getRole()) {
-                case "admin":
-
-                    Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                    roles =adminRole;
-
-                    break;
-                case "teacher":
-                    Role modRole = roleRepository.findByName(ERole.ROLE_TEACHER)
-                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                    roles=modRole;
-
-                    break;
-                default:
-                    Role userRole = roleRepository.findByName(ERole.ROLE_STUDENT)
-                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                    roles=userRole;
-            }
-        }
-
-
-        User userObject = new User(userRequest.getUsername(),
-                userRequest.getFirstname(),
-                userRequest.getLastname(),
-                encoder.encode(userRequest.getPassword()));
-
-        userObject.setRole(roles);
-
-
-
-        userService.saveUser(userObject);
+        userService.saveUser(userRequest);
         return ResponseEntity.ok(new MessageResponse("User was added successfully!"));
     }
 
@@ -194,8 +145,8 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     @PostMapping("/add-subject")
     public ResponseEntity<?> addSubject(@RequestParam String name,
-                                        @RequestParam Long teacherId){
-        subjectService.saveSubject(name, teacherId);
+                                        @RequestParam String teacherName){
+        subjectService.saveSubject(name, teacherName);
         return ResponseEntity.ok(new MessageResponse("added a new subject!"));
     }
 
@@ -222,5 +173,10 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     public ResponseEntity<?> deleteSubject(@RequestParam Long id){
         subjectService.deleteSubject(id);
         return ResponseEntity.ok(new MessageResponse("subject deleted !"));
+    }
+
+    @GetMapping("/subject/{id}")
+    public ResponseEntity<?> getSubjectById(@PathVariable Long id){
+        return ResponseEntity.ok(subjectService.getSubjectById(id));
     }
 }

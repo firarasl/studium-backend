@@ -1,10 +1,12 @@
 package com.bezkoder.springjwt.payload.response;
 
+import com.bezkoder.springjwt.models.Test;
+
 public class TestGPA {
 
-    private String testName;
+    private Test test;
 
-    private double gpa;
+    private double grade;
 
     private String subjectName;
     private boolean isGraded=false;
@@ -17,12 +19,12 @@ public class TestGPA {
         isGraded = true;
     }
 
-    public double getGpa() {
-        return gpa;
+    public double getGrade() {
+        return grade;
     }
 
-    public void setGpa(double gpa) {
-        this.gpa = gpa;
+    public void setGrade(double grade) {
+        this.grade = grade;
     }
 
     public String getSubjectName() {
@@ -33,11 +35,21 @@ public class TestGPA {
         this.subjectName = subjectName;
     }
 
-    public String getTestName() {
-        return testName;
+    public Test getTest() {
+        return test;
     }
 
-    public void setTestName(String testName) {
-        this.testName = testName;
+    public void setTest(Test test) {
+        this.test = test;
+    }
+
+    @Override
+    public String toString() {
+        return "TestGPA{" +
+                "test=" + test +
+                ", grade=" + grade +
+                ", subjectName='" + subjectName + '\'' +
+                ", isGraded=" + isGraded +
+                '}';
     }
 }

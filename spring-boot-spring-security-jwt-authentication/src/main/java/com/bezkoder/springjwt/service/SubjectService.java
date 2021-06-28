@@ -12,7 +12,7 @@ public interface SubjectService {
 
     List<Subject> getAllSubejects();
 
-    void saveSubject(String name, Long teacherId);
+    void saveSubject(String name, String teacherName);
 
     void updateSubject(SubjectUpdateRequest subjectUpdateRequest);
 
@@ -22,4 +22,7 @@ public interface SubjectService {
 
     SubjectAndGpaResponse mySubjectsAndGpa(Long currentUserId);
 
+    Subject getSubjectById(Long id);
+
+    List<Subject> getAllSubejectsByTeacher(Long id);
 }

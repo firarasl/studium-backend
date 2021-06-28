@@ -1,11 +1,13 @@
 package com.bezkoder.springjwt.repository;
 
+import com.bezkoder.springjwt.models.Subject;
 import com.bezkoder.springjwt.models.Test;
 import com.bezkoder.springjwt.models.TestResult;
 import com.bezkoder.springjwt.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +21,7 @@ public interface TestResultRepository extends JpaRepository<TestResult, Long> {
     List<TestResult> findAllByTest(Test test);
 
     Optional<TestResult> findByTestAndUser(Test test, User user);
+
+
+    List<TestResult> findAllByUserAndTest(User currentUser, Test test);
 }

@@ -36,7 +36,7 @@ public class StudentController {
 
 
 
-    @GetMapping("my-tests-gpa")
+    @GetMapping("my-tests-grade")
     public ResponseEntity<?> getTestGpa(@RequestParam Long subjectId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();

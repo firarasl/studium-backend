@@ -3,6 +3,8 @@ package com.bezkoder.springjwt.controllers;
 
 import com.bezkoder.springjwt.payload.request.CSV;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
+import com.bezkoder.springjwt.security.UserDetailsImpl;
+import com.bezkoder.springjwt.service.SubjectService;
 import com.bezkoder.springjwt.service.TestService;
 import com.bezkoder.springjwt.service.UserService;
 import com.opencsv.bean.CsvToBean;
@@ -10,6 +12,8 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +22,7 @@ import javax.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,12 +39,27 @@ public class TeacherController {
     @Autowired
     private TestService testService;
 
+    @Autowired
+    private SubjectService subjectService;
+
     @GetMapping("/all-students")
     public ResponseEntity<?> getAllStudents(){
-        return ResponseEntity.ok(userService.getAllStudents());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+        return ResponseEntity.ok(userService.getAllStudents(currentUser.getId()));
 
     }
 
+
+    @GetMapping("all-teachers-subjects")
+    public ResponseEntity<?> getAllTeachersSubjects(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+
+        return ResponseEntity.ok(subjectService.getAllSubejectsByTeacher(currentUser.getId()));
+    }
 
 //
 //    @PostMapping("/add-test")
@@ -51,14 +71,20 @@ public class TeacherController {
 //    }
     @PostMapping("/add-test")
     public ResponseEntity<?> addTest(@RequestParam @NotEmpty @NotNull String name,
-                                     @RequestParam @NotEmpty @NotNull String date){
+                                     @RequestParam @NotEmpty @NotNull String date,
+                                     @RequestParam @NotEmpty @NotNull String subjectName
+
+    ){
 
 
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
             Date parsedDate = dateFormat.parse(date);
             Timestamp timestamp = new java.sql.Timestamp(parsedDate.getTime());
-            testService.addTest(name, timestamp);
+            testService.addTest(name, timestamp, subjectName, currentUser.getId());
             return ResponseEntity.ok(new MessageResponse("Added new test successfully!"));
 
         } catch(Exception e) {
@@ -70,6 +96,15 @@ public class TeacherController {
     }
 
 
+    @GetMapping("/all-tests")
+    public ResponseEntity<?> getAllTeachersTest(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+        return ResponseEntity.ok(testService.getAllTestsOfTeacher(currentUser.getId()));
+
+    }
+
     @PostMapping("/update-test")
     public ResponseEntity<?> updateTest(@RequestParam @NotEmpty @NotNull String name,
                                         @RequestParam @NotEmpty @NotNull Long id,
@@ -77,6 +112,7 @@ public class TeacherController {
 
 
         try {
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
             Date parsedDate = dateFormat.parse(date);
             Timestamp timestamp = new java.sql.Timestamp(parsedDate.getTime());
@@ -100,6 +136,13 @@ public class TeacherController {
     }
 
 
+
+    @GetMapping("/test/{id}")
+    public ResponseEntity<?> getTestById(@PathVariable Long id){
+        return ResponseEntity.ok(testService.findById(id));
+    }
+
+
     @PutMapping("change-test-grade")
     public ResponseEntity<?> changeTestGrade(@RequestParam @NotEmpty @NotNull Long testId,
                                              @RequestParam @NotEmpty @NotNull Long studentId,
@@ -108,15 +151,15 @@ public class TeacherController {
         return ResponseEntity.ok(response);
     }
 
-//
-//    @PostMapping("/upload-csv-file")
-//    public ResponseEntity<Void> uploadCSVFile(@RequestParam("file") MultipartFile file) {
-//
-//        testService.parseCSV(file);
-//
-//       return ResponseEntity.noContent().build();
-//
-//    }
+
+    @PostMapping("/upload-csv-file")
+    public ResponseEntity<?> uploadCSVFile(@RequestParam(name = "file")  MultipartFile file) {
+
+        testService.parseCSV(file);
+
+        return ResponseEntity.ok(new MessageResponse("File uploaded !"));
+
+    }
 
 
     @DeleteMapping("delete-test")

@@ -3,20 +3,19 @@ package com.bezkoder.springjwt.payload.response;
 import com.bezkoder.springjwt.models.Subject;
 
 import java.util.List;
+import java.util.Map;
 
 public class SubjectAndGpaResponse {
 
-    private List<String> subjectName;
+    private Map<Double, Subject> subjects;
     private String clazzName;
-    private double gpa;
 
-
-    public List<String> getSubjectName() {
-        return subjectName;
+    public Map<Double, Subject> getSubjects() {
+        return subjects;
     }
 
-    public void setSubjectName(List<String> subjectName) {
-        this.subjectName = subjectName;
+    public void setSubjects(Map<Double, Subject> subjects) {
+        this.subjects = subjects;
     }
 
     public String getClazzName() {
@@ -26,13 +25,4 @@ public class SubjectAndGpaResponse {
     public void setClazzName(String clazzName) {
         this.clazzName = clazzName;
     }
-
-    public double getGpa() {
-        return gpa;
-    }
-
-    public void setGpa(double gpa) {
-        this.gpa = gpa;
-    }
-
 }
