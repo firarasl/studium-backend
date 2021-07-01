@@ -95,7 +95,7 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     @PostMapping("/add-clazz")
     public ResponseEntity<?> addClazz(@RequestParam String clazzname){
         clazzService.saveClazz(clazzname);
-        return ResponseEntity.ok(new MessageResponse("added a new class!"));
+        return ResponseEntity.ok(new MessageResponse("Added a new class!"));
 
     }
 
@@ -128,7 +128,7 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     @DeleteMapping("/delete-class")
     public ResponseEntity<?> deleteClazz(@RequestParam Long clazzId){
         clazzService.deleteClazz(clazzId);
-        return ResponseEntity.ok(new MessageResponse("deleted a new class!"));
+        return ResponseEntity.ok(new MessageResponse("Deleted a new class!"));
     }
 
 
@@ -147,7 +147,7 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     public ResponseEntity<?> addSubject(@RequestParam String name,
                                         @RequestParam String teacherName){
         subjectService.saveSubject(name, teacherName);
-        return ResponseEntity.ok(new MessageResponse("added a new subject!"));
+        return ResponseEntity.ok(new MessageResponse("Added a new subject!"));
     }
 
 
@@ -156,9 +156,14 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     public ResponseEntity<?> updateSubject(@RequestBody SubjectUpdateRequest subjectUpdateRequest){
         System.out.println(subjectUpdateRequest);
         subjectService.updateSubject(subjectUpdateRequest);
-        return ResponseEntity.ok(new MessageResponse("subject was updated !"));
+        return ResponseEntity.ok(new MessageResponse("Subject was updated !"));
     }
 
+    @PutMapping("/subject-assign-clazz")
+    public ResponseEntity<?> updateSubject(@RequestParam Long id, String clazzName){
+        subjectService.assignClazz(id, clazzName);
+        return ResponseEntity.ok(new MessageResponse("Subject was assigned to a class !"));
+    }
 
 
 
@@ -166,13 +171,13 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
     public ResponseEntity<?> archieveSubject(@RequestParam Long id){
 
         subjectService.archieveSubject(id);
-        return ResponseEntity.ok(new MessageResponse("archieved the subject !"));
+        return ResponseEntity.ok(new MessageResponse("Archieved the subject !"));
     }
 
     @DeleteMapping("/delete-subject")
     public ResponseEntity<?> deleteSubject(@RequestParam Long id){
         subjectService.deleteSubject(id);
-        return ResponseEntity.ok(new MessageResponse("subject deleted !"));
+        return ResponseEntity.ok(new MessageResponse("Subject deleted !"));
     }
 
     @GetMapping("/subject/{id}")

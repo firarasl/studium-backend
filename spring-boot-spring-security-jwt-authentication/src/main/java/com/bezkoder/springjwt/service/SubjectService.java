@@ -25,4 +25,6 @@ public interface SubjectService {
     Subject getSubjectById(Long id);
 
     List<Subject> getAllSubejectsByTeacher(Long id);
+
+    void assignClazz(Long id, String clazzName);
 }

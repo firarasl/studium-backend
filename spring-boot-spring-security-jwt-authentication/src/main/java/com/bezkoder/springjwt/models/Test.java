@@ -3,6 +3,7 @@ package com.bezkoder.springjwt.models;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class Test {
     @Size(max = 50)
     private String name;
 
-
+    @NotNull
     private Timestamp date;
 
 

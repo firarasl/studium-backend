@@ -59,7 +59,7 @@ private UserRepository userRepository;
     public Optional<User> getUserByUsername(String username) {
         Optional<User> user= userRepository.findByUsername(username);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this username doesnt exist!");
+            throw new NoSuchElementException("This username doesnt exist!");
         }else{
             return user;
         }
@@ -128,12 +128,12 @@ private UserRepository userRepository;
     public void deleteUser(Long id) {
         Optional<User> currentUser = userRepository.findById(id);
         if(!currentUser.isPresent()){
-            throw new NoSuchElementException("this user doesnt exist!");
+            throw new NoSuchElementException("This user doesnt exist!");
         }
 
         if (currentUser.get().getRole().getName() == ERole.ROLE_TEACHER){
             if (subjectRepository.findAllByTeacherIdAndArchieved(id, false).size()>0){
-                throw new IllegalArgumentException("this teacher has assigned active subjects");
+                throw new IllegalArgumentException("This teacher has assigned active subjects");
             }
 
             List<Subject> teachersSubjects = (List<Subject>) Hibernate.unproxy(subjectRepository.findAllByUser(currentUser.get()));
@@ -190,30 +190,36 @@ private UserRepository userRepository;
     public void updateUser(UserUpdateRequest updateRequest, Long userId) {
         Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(userId));
         if(!currentUser.isPresent()){
-            throw new NoSuchElementException("this user doesnt exist!");
+            throw new NoSuchElementException("This user doesnt exist!");
         }
 
         if(updateRequest.getFirstname() == null && updateRequest.getLastname() == null
-              && updateRequest.getUsername() == null && updateRequest.getPassword() == null
+              && updateRequest.getUsername() == null && updateRequest.getPassword() == null &&
+
+                !updateRequest.getFirstname().isEmpty() && !updateRequest.getLastname().isEmpty()
+                && !updateRequest.getUsername().isEmpty() && !updateRequest.getPassword().isEmpty()
         ){
             throw new IllegalArgumentException("Error: Edit something");
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        if (updateRequest.getFirstname() != null
+        if (updateRequest.getFirstname() != null && !updateRequest.getFirstname().isEmpty()
                 && !updateRequest.getFirstname().equals(currentUser.get().getFirstname())
         ) {
 
             currentUser.get().setFirstname(updateRequest.getFirstname());
         }
 
-        if (updateRequest.getLastname() != null && !updateRequest.getLastname().equals(currentUser.get().getLastname())
+        if (updateRequest.getLastname() != null && !updateRequest.getLastname().isEmpty()
+
+                && !updateRequest.getLastname().equals(currentUser.get().getLastname())
         ) {
 
             currentUser.get().setLastname(updateRequest.getLastname());
         }
 
-        if (updateRequest.getUsername() != null && !updateRequest.getUsername().equals(currentUser.get().getUsername())
+        if (updateRequest.getUsername() != null  && !updateRequest.getUsername().isEmpty()
+                && !updateRequest.getUsername().equals(currentUser.get().getUsername())
         ) {
             if (userRepository.existsByUsername(updateRequest.getUsername())) {
                 throw new IllegalArgumentException("Error: Username is already taken");
@@ -222,7 +228,8 @@ private UserRepository userRepository;
             currentUser.get().setUsername(updateRequest.getUsername());
         }
 
-        if (updateRequest.getPassword() != null && !passwordEncoder.matches(currentUser.get().getPassword(),
+        if (updateRequest.getPassword() != null && !updateRequest.getPassword().isEmpty()
+                && !passwordEncoder.matches(currentUser.get().getPassword(),
                 updateRequest.getPassword())
         ) {
 
@@ -237,7 +244,7 @@ private UserRepository userRepository;
 
         Optional<User> currentTeacher = (Optional<User>) Hibernate.unproxy(userRepository.findById(teacherId));
         if(!currentTeacher.isPresent()){
-            throw new NoSuchElementException("this user doesnt exist!");
+            throw new NoSuchElementException("This user doesnt exist!");
         }
 
         List<Subject> subjectList = subjectRepository.findAllByUser(currentTeacher.get());
@@ -283,7 +290,7 @@ private UserRepository userRepository;
     public User getMyData(Long id) {
         Optional<User> user= userRepository.findById(id);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this username doesnt exist!");
+            throw new NoSuchElementException("This username doesnt exist!");
         }
 
 //        MyProfile myProfile = new MyProfile();
@@ -301,18 +308,18 @@ private UserRepository userRepository;
     public void sendMessage(MessageRequest request, Long currentUserId) {
         Optional<User> user= userRepository.findById(currentUserId);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this sender doesnt exist!");
+            throw new NoSuchElementException("This sender doesnt exist!");
         }
 
 
 
         Optional<User> user2= userRepository.findByUsername(request.getReceiverUsername());
         if(!user2.isPresent()){
-            throw new NoSuchElementException("this receiver doesnt exist!");
+            throw new NoSuchElementException("This receiver doesnt exist!");
         }
 
         if(user.get().getUsername().equals(user2.get().getUsername())) {
-            throw new IllegalArgumentException("you cant send message to yourself!");
+            throw new IllegalArgumentException("You cant send message to yourself!");
         }
 
         if(user.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
@@ -320,7 +327,7 @@ private UserRepository userRepository;
             if(user2.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
                 List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
                 if (!Collections.disjoint(firstSubjects, secondSubjects)){
-                    throw new IllegalArgumentException("as a student you may send message to only ur collegues!");
+                    throw new IllegalArgumentException("As a student you may send message to only ur collegues!");
                 }
             }
         }
@@ -334,7 +341,7 @@ private UserRepository userRepository;
                 List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
 
             if (!Collections.disjoint(subjectList, secondSubjects)){
-                throw new IllegalArgumentException("as a teacher you may send message to only ur students!");
+                throw new IllegalArgumentException("As a teacher you may send message to only ur students!");
             }}
         }
 
@@ -352,7 +359,7 @@ messageRepository.save(message);
 
         Optional<User> user= userRepository.findById(id);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this sender doesnt exist!");
+            throw new NoSuchElementException("This sender doesnt exist!");
         }
 
         int count = messageRepository.countByReceiverAndIsRead(user.get().getId(), false);
@@ -365,7 +372,7 @@ messageRepository.save(message);
     public List<Message> myInbox(Long id) {
         Optional<User> user= userRepository.findById(id);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this sender doesnt exist!");
+            throw new NoSuchElementException("This sender doesnt exist!");
         }
         List<Message> messages = messageRepository.findAllByReceiver(user.get());
 
@@ -377,11 +384,11 @@ messageRepository.save(message);
     public Message openMessage(Long id, Long messageId) {
         Optional<User> user= userRepository.findById(id);
         if(!user.isPresent()){
-            throw new NoSuchElementException("this sender doesnt exist!");
+            throw new NoSuchElementException("This sender doesnt exist!");
         }
         Optional<Message> message= messageRepository.findById(messageId);
         if(!message.isPresent()){
-            throw new NoSuchElementException("this message doesnt exist!");
+            throw new NoSuchElementException("This message doesnt exist!");
         }
 
         if(!message.get().getReceiver().equals(user.get())){

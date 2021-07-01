@@ -7,18 +7,14 @@ import javax.validation.constraints.Size;
 
 public class
 UserUpdateRequest {
-    @NotBlank
     private String username;
 
     private Long id;
 
-    @NotBlank
     private String firstname;
 
-    @NotBlank
     private String lastname;
 
-    @NotBlank
     private String password;
 
     public String getUsername() {

@@ -55,10 +55,14 @@ private SubjectRepository subjectRepository;
         Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(teacherName));
 
         if (!teacher.isPresent()){
-            throw new NoSuchElementException("this user does not exist");
+            throw new NoSuchElementException("This user does not exist");
         }
         if (!teacher.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
-            throw new NoSuchElementException("this user isnt a teacher");
+            throw new NoSuchElementException("This user isnt a teacher");
+        }
+        Optional<Subject> subjectOptional = subjectRepository.findByName(name);
+        if (subjectOptional.isPresent()){
+            throw new IllegalArgumentException("This subject already exists");
         }
 
         User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
@@ -75,10 +79,10 @@ private SubjectRepository subjectRepository;
     public void updateSubject(SubjectUpdateRequest request) {
         Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(request.getId()));
         if (!optionalSubject.isPresent()){
-            throw new NoSuchElementException("no subject like this");
+            throw new NoSuchElementException("No subject like this");
         }
         if (optionalSubject.get().isArchieved()){
-            throw new IllegalArgumentException("subject is archieved");
+            throw new IllegalArgumentException("Subject is archieved");
         }
 
 if ((request.getTeacherName()==null || request.getTeacherName().isEmpty() )
@@ -90,24 +94,24 @@ if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
 
     Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(request.getTeacherName()));
     if (!teacher.isPresent()){
-        throw new NoSuchElementException("no user like this");
+        throw new NoSuchElementException("No user like this");
     }
     else if(!teacher.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
-        throw new NoSuchElementException("user isnt a teacher");
+        throw new NoSuchElementException("User isnt a teacher");
     }
 
     if (!optionalSubject.get().getUser().getUsername().equals(request.getTeacherName()) ){
         User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
         optionalSubject.get().setUser(teacherObject);
     }else{
-        throw new IllegalArgumentException("assigning to the same teacher");
+        throw new IllegalArgumentException("Assigning to the same teacher");
     }
 }
         if( request.getName()!=null && !request.getName().isEmpty() ){
             if (!optionalSubject.get().getName().equals(request.getName())){
                 optionalSubject.get().setName(request.getName());
             }else{
-                throw new IllegalArgumentException("assigning to the same name");
+                throw new IllegalArgumentException("Assigning to the same name");
             }
         }
 
@@ -120,7 +124,12 @@ if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
 
         Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
-            throw new NoSuchElementException("no subject like this");
+            throw new NoSuchElementException("No subject like this");
+        }
+
+        List<Test> testList = testRepository.findAllBySubject(optionalSubject.get());
+        if (testList.size()==0){
+            throw new IllegalArgumentException("Subject doesn't have tests");
         }
 
         optionalSubject.get().setArchieved(true);
@@ -134,7 +143,7 @@ if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
 
         Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
-            throw new NoSuchElementException("no subject like this");
+            throw new NoSuchElementException("No subject like this");
         }
 
         List<Test> testList = (List<Test>) Hibernate.unproxy(testRepository.findAllBySubjectId(id));
@@ -142,7 +151,7 @@ if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
             subjectRepository.deleteById(id);
         }
         else{
-            throw new IllegalArgumentException("subject has tests");
+            throw new IllegalArgumentException("Subject has tests");
         }
     }
 
@@ -191,7 +200,7 @@ return answer;
 
         Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
-            throw new NoSuchElementException("This subject doesnt have a class");
+            throw new NoSuchElementException("This subject doesnt exist");
         }
         return optionalSubject.get();
     }
@@ -207,6 +216,38 @@ return answer;
         List<Subject> subjectList = subjectRepository.findAllByUser(optionalUser.get());
 
         return subjectList;
+    }
+
+    @Override
+    @Transactional
+    public void assignClazz(Long id, String clazzName) {
+        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
+        if (!optionalSubject.isPresent()){
+            throw new NoSuchElementException("This subject doesnt exist");
+        }
+
+        Optional<Clazz> optionalClazz = clazzRepository.findByName(clazzName);
+        if (!optionalClazz.isPresent()){
+            throw new NoSuchElementException("This class doesnt exist");
+        }
+        if (optionalClazz.get().getSubjects().contains(optionalSubject.get())){
+            throw new IllegalArgumentException("This class already has this subject");
+        }
+
+        Subject subject = entityManager.getReference(Subject.class, optionalSubject.get().getId());
+        List<Subject> list;
+        if(optionalClazz.get().getSubjects()==null){
+             list = new ArrayList<>();
+            list.add(subject);
+        }
+        else{
+            list=optionalClazz.get().getSubjects();
+            list.add(subject);
+        }
+        optionalClazz.get().setSubjects(list);
+
+        entityManager.persist(optionalClazz.get());
+
     }
 
 

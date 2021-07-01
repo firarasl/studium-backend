@@ -43,6 +43,12 @@ public class ClazzServiceImpl implements ClazzService {
 
     @Override
     public void saveClazz(String clazzname) {
+
+        Optional<Clazz> clazzOptional = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findByName(clazzname));
+        if(clazzOptional.isPresent()){
+            throw new IllegalArgumentException("This class already exists!");
+        }
+
         Clazz clazz = new Clazz(clazzname);
         clazzRepository.save(clazz);
     }
@@ -50,13 +56,23 @@ public class ClazzServiceImpl implements ClazzService {
     @Override
     public void updateClazzName(Long id, String name) {
         Optional<Clazz> clazz = clazzRepository.findById(id);
-        if (clazz.isPresent()){
-            Clazz clazzNew = new Clazz(id, name);
-            clazzRepository.save(clazzNew);
+        if (!clazz.isPresent()){
+            throw new NoSuchElementException("This class doesnt exist!");
         }
-        else {
-            throw new NoSuchElementException("this class doesnt exist!");
+
+        if(clazz.get().getName().equals(name)){
+            throw new IllegalArgumentException("The same name for the class!");
         }
+
+
+        Optional<Clazz> clazzOptional = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findByName(name));
+        if(clazzOptional.isPresent()){
+            throw new IllegalArgumentException("This class already exists!");
+        }
+
+        Clazz clazzNew = new Clazz(id, name);
+        clazzRepository.save(clazzNew);
+
     }
 
     @Override
@@ -69,17 +85,21 @@ public class ClazzServiceImpl implements ClazzService {
         Optional<User> user = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(username));
 
         if (!user.isPresent()){
-            throw new NoSuchElementException("this user doesnt exist!");
+            throw new NoSuchElementException("This user doesnt exist!");
         }
 
         if (!user.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-            throw new IllegalArgumentException("this user isnt a student!");
+            throw new IllegalArgumentException("This user isnt a student!");
+        }
+
+        if (user.get().getClazz().getId() == clazzId){
+            throw new IllegalArgumentException("This student is already in this class!");
         }
         Clazz classObject = new Clazz();
         if (clazzId != 0){
             Optional<Clazz> clazz = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findById(clazzId));
             if (!clazz.isPresent()){
-                throw new NoSuchElementException("this class doesnt exist!");
+                throw new NoSuchElementException("This class doesnt exist!");
             }
 
            classObject  = entityManager.
@@ -101,7 +121,7 @@ public class ClazzServiceImpl implements ClazzService {
     public void deleteClazz(Long clazzId) {
         Optional<Clazz> clazz = clazzRepository.findById(clazzId);
         if (!clazz.isPresent()){
-            throw new NoSuchElementException("this class doesnt exist!");
+            throw new NoSuchElementException("This class doesnt exist!");
         }
 
         List<User> userList = userRepository.findAllByClazz(clazz.get());
@@ -120,7 +140,7 @@ public class ClazzServiceImpl implements ClazzService {
     public void manageClazzSubjects(Long clazzId, List<Long> subjectIds) {
         Optional<Clazz> clazz = (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findById(clazzId));
         if (!clazz.isPresent()){
-            throw new NoSuchElementException("this class doesnt exist!");
+            throw new NoSuchElementException("This class doesnt exist!");
         }
 List<Subject> subjectList = new ArrayList<>();
 
@@ -133,7 +153,7 @@ List<Subject> subjectList = new ArrayList<>();
                 subjectList.add(subject);
             }
             else{
-                throw new NoSuchElementException("this subject doesnt exist!");
+                throw new NoSuchElementException("This subject doesnt exist!");
             }
 
         }
@@ -149,7 +169,7 @@ List<Subject> subjectList = new ArrayList<>();
     public ClazzResponse getClazzById(Long clazzId) {
         Optional<Clazz> clazz = clazzRepository.findById(clazzId);
         if (!clazz.isPresent()){
-            throw new NoSuchElementException("this class doesnt exist!");
+            throw new NoSuchElementException("This class doesnt exist!");
         }
 
         List<User> studentList = userRepository.findAllByClazz(clazz.get());

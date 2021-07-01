@@ -24,23 +24,23 @@ public class User {
 	private Long id;
 
 	@NotBlank
-	@Size(max = 20)
+	@Size(max = 20, min = 3)
 	@Column(name = "username")
 	private String username;
 
 
 	@NotBlank
-	@Size(max = 20)
+	@Size(max = 20, min = 3)
 	@Column(name = "firstname")
 	private String firstname;
 
 	@NotBlank
-	@Size(max = 20)
+	@Size(max = 20, min = 3)
 	@Column(name = "lastname")
 	private String lastname;
 
 	@NotBlank
-	@Size(max = 120)
+	@Size(max = 120 , min = 3)
 	@JsonIgnore
 	@Column(name = "password")
 	private String password;

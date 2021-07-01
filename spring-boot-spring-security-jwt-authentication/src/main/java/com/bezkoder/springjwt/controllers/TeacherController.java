@@ -1,14 +1,12 @@
 package com.bezkoder.springjwt.controllers;
 
 
-import com.bezkoder.springjwt.payload.request.CSV;
+import com.bezkoder.springjwt.payload.request.AddTestRequest;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.security.UserDetailsImpl;
 import com.bezkoder.springjwt.service.SubjectService;
 import com.bezkoder.springjwt.service.TestService;
 import com.bezkoder.springjwt.service.UserService;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.security.Principal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -70,28 +63,23 @@ public class TeacherController {
 //
 //    }
     @PostMapping("/add-test")
-    public ResponseEntity<?> addTest(@RequestParam @NotEmpty @NotNull String name,
-                                     @RequestParam @NotEmpty @NotNull String date,
-                                     @RequestParam @NotEmpty @NotNull String subjectName
-
-    ){
-
-
+    public ResponseEntity<?> addTest(@RequestBody AddTestRequest request
+                                     ){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+        Timestamp timestamp;
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
-
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-            Date parsedDate = dateFormat.parse(date);
-            Timestamp timestamp = new java.sql.Timestamp(parsedDate.getTime());
-            testService.addTest(name, timestamp, subjectName, currentUser.getId());
-            return ResponseEntity.ok(new MessageResponse("Added new test successfully!"));
-
+            Date parsedDate = dateFormat.parse(request.getDate());
+             timestamp = new java.sql.Timestamp(parsedDate.getTime());
         } catch(Exception e) {
-            return new ResponseEntity<>(
-                    "Not proper date format",
+            return new ResponseEntity<>(new MessageResponse(
+                    "Not proper date format"),
                     HttpStatus.BAD_REQUEST);
         }
+        testService.addTest(request.getName(), timestamp, request.getSubjectName(), currentUser.getId());
+        return ResponseEntity.ok(new MessageResponse("Added new test successfully!"));
+
 
     }
 

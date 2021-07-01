@@ -1,8 +1,17 @@
 package com.bezkoder.springjwt.payload.request;
 
-public class MessageRequest {
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
+public class MessageRequest {
+@NotNull
+@NotEmpty
+@Size(min = 3)
     private String text;
+    @NotNull
+    @NotEmpty
+    @Size(min = 3)
     private String receiverUsername;
 
     public String getText() {

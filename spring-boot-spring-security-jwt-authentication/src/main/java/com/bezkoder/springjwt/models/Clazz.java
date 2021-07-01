@@ -19,7 +19,7 @@ public class Clazz {
     private Long id;
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 50, min = 3)
     private String name;
 
 

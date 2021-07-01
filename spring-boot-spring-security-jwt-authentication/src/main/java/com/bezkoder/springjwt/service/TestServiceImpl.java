@@ -50,21 +50,21 @@ private TestsRepository testsRepository;
                 (Optional<Subject>) Hibernate.unproxy(subjectRepository.findByName(subjectName));
 
         if (!subject.isPresent()){
-            throw new NoSuchElementException("this subject doesnt exist");
+            throw new NoSuchElementException("This subject doesnt exist");
         }
 
         Optional<User> teacher =
                 (Optional<User>) Hibernate.unproxy(userRepository.findById(teacherId));
 
         if (!teacher.isPresent()){
-            throw new NoSuchElementException("this teacher doesnt exist");
+            throw new NoSuchElementException("This teacher doesnt exist");
         }
 
-        if (subject.get().getUser().equals(teacher.get())) {
+        if (subject.get().getUser()!=null && subject.get().getUser().equals(teacher.get())) {
             test.setSubject(subject.get());
         }
 else{
-    throw new IllegalArgumentException("you cant interfere in other teacher's tests");
+    throw new IllegalArgumentException("You cant interfere in other teacher's tests");
         }
         testsRepository.save(test);
 
@@ -75,7 +75,7 @@ else{
         Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(id));
 
         if (!optionalTest.isPresent()){
-            throw new NoSuchElementException("this test doesnt exist");
+            throw new NoSuchElementException("This test doesnt exist");
         }
 
         if (!optionalTest.get().getName().equals(name)){
@@ -95,7 +95,7 @@ else{
         Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(id));
 
         if (!optionalTest.isPresent()){
-            throw new NoSuchElementException("this test doesnt exist");
+            throw new NoSuchElementException("This test doesnt exist");
         }
 
         List<StudentRespond> studentResponds = new ArrayList<>();
@@ -117,16 +117,16 @@ else{
 
         Optional<Test> testOptional = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(testId));
         if (!testOptional.isPresent()){
-            throw new NoSuchElementException("this test doesnt exist");
+            throw new NoSuchElementException("This test doesnt exist");
         }
 
         Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(studentId));
         if(!currentUser.isPresent()){
-            throw new NoSuchElementException("this username doesnt exist!");
+            throw new NoSuchElementException("This username doesnt exist!");
         }
 
         if (!currentUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-            throw new NoSuchElementException("this user isnt a student!");
+            throw new NoSuchElementException("This user isnt a student!");
         }
 
 
@@ -144,7 +144,7 @@ else{
             testResult.setTest(testOptional.get());
             testResult.setUser(currentUser.get());
             testResultRepository.save(testResult);
-        return "added a test result";
+        return "Added a test result";
         }
 
 
@@ -176,19 +176,19 @@ else{
                 Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(results.get(i).getUsername()));
 
                 if (!optionalUser.isPresent()){
-                    throw new NoSuchElementException("this user doesnt exist");
+                    throw new NoSuchElementException("This user doesnt exist");
                 }
                 Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(results.get(i).getTestId()));
 
                 if (!optionalTest.isPresent()){
-                    throw new NoSuchElementException("this test doesnt exist");
+                    throw new NoSuchElementException("This test doesnt exist");
                 }
                 if(!optionalUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-                    throw new IllegalArgumentException("this user isnt a student");
+                    throw new IllegalArgumentException("This user isnt a student");
                 }
 
                 if (!optionalUser.get().getClazz().getSubjects().contains(optionalTest.get().getSubject())){
-                    throw new IllegalArgumentException("this student doesnt have this test's subject");
+                    throw new IllegalArgumentException("This student doesnt have this test's subject");
                 }
 
                 TestResult testResult = new TestResult();
@@ -210,7 +210,7 @@ else{
     public void deleteTest(Long testId) {
         Optional<Test> testOptional = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(testId));
         if (!testOptional.isPresent()){
-            throw new NoSuchElementException("this test doesnt exist");
+            throw new NoSuchElementException("This test doesnt exist");
         }
         List<TestResult> testResultList = (List<TestResult>) Hibernate.unproxy(testResultRepository.findAllByTest(testOptional.get()));
 
@@ -232,7 +232,7 @@ else{
                 (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(subjectId));
 
         if (!subject.isPresent()){
-            throw new NoSuchElementException("this subject doesnt exist");
+            throw new NoSuchElementException("This subject doesnt exist");
         }
         User user= (User) Hibernate.unproxy(userRepository.findById(id).get());
 
@@ -241,7 +241,7 @@ else{
         List<Subject> clazzSubjects = clazz.getSubjects();
 
         if (!clazzSubjects.contains(subject.get())){
-            throw new IllegalArgumentException("this student requested subject not assigned to his clazz");
+            throw new IllegalArgumentException("This student requested subject not assigned to his clazz");
         }
 
 
