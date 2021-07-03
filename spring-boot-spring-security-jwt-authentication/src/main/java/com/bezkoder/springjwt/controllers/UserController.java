@@ -34,7 +34,7 @@ public class UserController {
 
 
     @PutMapping("/update-myself")
-    public ResponseEntity<Void> updateUser(@RequestBody UserUpdateRequest updateUser
+    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateUser
                                             ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
@@ -42,7 +42,7 @@ public class UserController {
         System.out.println(updateUser);
         userService.updateUser(updateUser, currentUser.getId());
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponse("Your data was updated"));
     }
 
 
@@ -66,7 +66,7 @@ public class UserController {
         UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
 
         userService.sendMessage(request, currentUser.getId());
-        return ResponseEntity.ok(new MessageResponse("message sent !"));
+        return ResponseEntity.ok(new MessageResponse("Message was sent !"));
     }
 
     @GetMapping("/my-unread-msgs")

@@ -15,9 +15,13 @@ public interface ClazzRepository extends JpaRepository<Clazz,Long> {
 
     List<Clazz> findAll();
 
-    List<Clazz> findAllBySubjects(Subject subjects);
+//    List<Clazz> findAllBySubjects(Subject subjects);
 
     Optional<Clazz> findByName(String clazzname);
+
+//    List<Clazz> findAllBySubjects(List<Subject> subject);
+
+    Optional<Clazz> findBySubjects(List<Subject> subjectList);
 
 
 //    @Query(value="INSERT INTO clazz_subject (clazz_id, subject_id) VALUES (:clazzId, :subjectId);\n", nativeQuery=true)

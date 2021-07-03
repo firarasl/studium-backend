@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -50,8 +51,12 @@ private UserRepository userRepository;
 
     @Override
     @Transactional
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers(Long id) {
         List<User> userList = (List<User>) Hibernate.unproxy(userRepository.findAll());
+        Optional<User> currentUser = userRepository.findById(id);
+
+        userList.remove(currentUser.get());
+
         return userList;
     }
 
@@ -136,7 +141,7 @@ private UserRepository userRepository;
                 throw new IllegalArgumentException("This teacher has assigned active subjects");
             }
 
-            List<Subject> teachersSubjects = (List<Subject>) Hibernate.unproxy(subjectRepository.findAllByUser(currentUser.get()));
+            List<Subject> teachersSubjects = (List<Subject>) Hibernate.unproxy(subjectRepository.findAllByTeacherIdAndArchieved(id, true));
             for (int i = 0; i < teachersSubjects.size(); i++) {
                 teachersSubjects.get(i).setUser(null);
             }
@@ -240,7 +245,7 @@ private UserRepository userRepository;
     }
 
     @Override
-    public Set<StudentRespond> getAllStudents(Long teacherId) {
+    public Set<StudentRespond> getAllTeachersStudents(Long teacherId) {
 
         Optional<User> currentTeacher = (Optional<User>) Hibernate.unproxy(userRepository.findById(teacherId));
         if(!currentTeacher.isPresent()){
@@ -257,6 +262,7 @@ private UserRepository userRepository;
             if(userListAll.get(i).getRole().getName().equals(ERole.ROLE_STUDENT)
                 && userListAll.get(i).getClazz() !=null &&
                     !Collections.disjoint(userListAll.get(i).getClazz().getSubjects(), subjectList)){
+//                collecting classes which have subjects of this teacher
                 clazzList.add(userListAll.get(i).getClazz());
             }
         }
@@ -323,26 +329,43 @@ private UserRepository userRepository;
         }
 
         if(user.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-            List<Subject> firstSubjects = user.get().getClazz().getSubjects();
+            if (user.get().getClazz()==null || user.get().getClazz().getSubjects()==null
+            ){
+                throw new IllegalArgumentException("You may message only your classmates!");
+            }
+            List<Subject> firstSubjects = user.get().getClazz().getSubjects().stream().filter(o-> o.isArchieved()==false).collect(Collectors.toList());
             if(user2.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-                List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
-                if (!Collections.disjoint(firstSubjects, secondSubjects)){
-                    throw new IllegalArgumentException("As a student you may send message to only ur collegues!");
+                if (user2.get().getClazz()==null || user2.get().getClazz().getSubjects()==null
+                ){
+                    throw new IllegalArgumentException("You may message only your classmates!");
+                }
+                List<Subject> secondSubjects = user2.get().getClazz().getSubjects().stream().filter(o-> o.isArchieved()==false).collect(Collectors.toList());
+                if (Collections.disjoint(firstSubjects, secondSubjects)){
+                    throw new IllegalArgumentException("This receiver isn't your classmate!");
+                }
+            }else if(user2.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
+                List<Subject> secondSubjects = subjectRepository.findAllByTeacherIdAndArchieved(user2.get().getId(), false);
+                if (Collections.disjoint(firstSubjects, secondSubjects)){
+                    throw new IllegalArgumentException("This user is not your teacher !");
                 }
             }
         }
         else if(user.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
 //            all subjects of a teacher
-            List<Subject> subjectList = subjectRepository.findAllByTeacherIdAndArchieved(user.get().getId(), true);
+            List<Subject> subjectList = subjectRepository.findAllByUser(user.get());
             // all subjects of a receiver student
 
             if(user2.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-
+                if ( user2.get().getClazz()==null || user2.get().getClazz().getSubjects()==null
+                ){
+                    throw new IllegalArgumentException("This student isn't yours!");
+                }
                 List<Subject> secondSubjects = user2.get().getClazz().getSubjects();
 
-            if (!Collections.disjoint(subjectList, secondSubjects)){
+            if (Collections.disjoint(subjectList, secondSubjects)){
                 throw new IllegalArgumentException("As a teacher you may send message to only ur students!");
             }}
+
         }
 
         Message message = new Message();

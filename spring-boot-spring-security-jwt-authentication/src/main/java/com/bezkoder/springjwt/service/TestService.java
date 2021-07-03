@@ -13,13 +13,13 @@ import java.util.Set;
 public interface TestService {
 
 
-    void addTest(String name, Timestamp date, String subjectName, Long teacherId);
+    void addTest(String name, Timestamp date, String subjectName, Long teacherId, String clazzName);
 
     void updateTest(Long id, String name, Timestamp timestamp);
 
     List<StudentRespond> getAllStudentsOfTest(Long id);
 
-    String changeTestGrade(Long testId, Long studentId, double grade);
+    String changeTestGrade(Long testId, String studentName, double grade);
 
     void parseCSV(MultipartFile file);
 

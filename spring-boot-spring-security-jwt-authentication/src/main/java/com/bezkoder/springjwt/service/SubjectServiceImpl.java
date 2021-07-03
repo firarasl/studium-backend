@@ -4,6 +4,7 @@ import com.bezkoder.springjwt.helper.StudentDataUtil;
 import com.bezkoder.springjwt.models.*;
 import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
 import com.bezkoder.springjwt.payload.response.SubjectAndGpaResponse;
+import com.bezkoder.springjwt.payload.response.SubjectResponse;
 import com.bezkoder.springjwt.repository.*;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,9 @@ private SubjectRepository subjectRepository;
     @Override
     @Transactional
 
-    public void saveSubject(String name, String teacherName) {
+    //CORRECTED
+
+    public void saveSubject(String name, String teacherName, String clazzName) {
 
         Optional<User> teacher = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(teacherName));
 
@@ -60,19 +63,36 @@ private SubjectRepository subjectRepository;
         if (!teacher.get().getRole().getName().equals(ERole.ROLE_TEACHER)){
             throw new NoSuchElementException("This user isnt a teacher");
         }
-        Optional<Subject> subjectOptional = subjectRepository.findByName(name);
-        if (subjectOptional.isPresent()){
-            throw new IllegalArgumentException("This subject already exists");
+
+        Optional<Clazz> optionalClazz = clazzRepository.findByName(clazzName);
+        if (!optionalClazz.isPresent()){
+            throw new IllegalArgumentException("This class doesnt exist");
+        }
+        List<Subject> subjects= optionalClazz.get().getSubjects();
+        for(Subject subject: subjects){
+            if (subject.getName().equals(name)){
+                throw new IllegalArgumentException("This class already has this subject");
+            }
         }
 
-        User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
+
+//        User teacherObject = entityManager.getReference(User.class, teacher.get().getId());
         Subject subject = new Subject();
         subject.setName(name);
-        subject.setUser(teacherObject);
-        entityManager.persist(subject);
+        subject.setUser(teacher.get());
+        subjects.add(subject);
+        optionalClazz.get().setSubjects(subjects);
+
+        subjectRepository.save(subject);
+        clazzRepository.save(optionalClazz.get());
+//        entityManager.persist(subject);
+//        clazzRepository.save(optionalClazz.get());
 
 
     }
+
+
+
 
     @Override
     @Transactional
@@ -87,7 +107,7 @@ private SubjectRepository subjectRepository;
 
 if ((request.getTeacherName()==null || request.getTeacherName().isEmpty() )
 && (request.getName()==null || request.getName().isEmpty()  )){
-    throw new IllegalArgumentException("no data to change");
+    throw new IllegalArgumentException("Nothing to change");
 }
 
 if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
@@ -168,7 +188,7 @@ if(request.getTeacherName()!=null && !request.getTeacherName().isEmpty() ){
 
         Optional<Clazz> optionalClazz = Optional.ofNullable(currentUser.getClazz());
         if (!optionalClazz.isPresent()){
-            throw new NoSuchElementException("This student doesnt have a class");
+            throw new NoSuchElementException("Yoi don't have a class");
         }
 
         List<Subject> subjectList= optionalClazz.get().getSubjects();
@@ -196,59 +216,90 @@ return answer;
     }
 
     @Override
-    public Subject getSubjectById(Long id) {
+    public SubjectResponse getSubjectById(Long id) {
 
         Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
         if (!optionalSubject.isPresent()){
             throw new NoSuchElementException("This subject doesnt exist");
         }
-        return optionalSubject.get();
+        SubjectResponse response = new SubjectResponse();
+        response.setArchieved(optionalSubject.get().isArchieved());
+        response.setName(optionalSubject.get().getName());
+        response.setTeacherName(optionalSubject.get().getUser().getUsername());
+        response.setId(optionalSubject.get().getId());
+        List<Subject> list = new ArrayList<>();
+        list.add(optionalSubject.get());
+        Optional<Clazz> clazz = clazzRepository.findBySubjects(list);
+        if(clazz.isPresent()){
+            response.setClazzName(clazz.get().getName());
+        }
+
+
+
+        return response;
     }
 
     @Override
-    public List<Subject> getAllSubejectsByTeacher(Long id) {
+    public List<SubjectResponse> getAllSubejectsByTeacher(Long id) {
 
         Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(id));
         if (!optionalUser.isPresent()){
-            throw new NoSuchElementException("This user doesnt have a class");
+            throw new NoSuchElementException("This user doesnt exist");
         }
 
         List<Subject> subjectList = subjectRepository.findAllByUser(optionalUser.get());
+        List<SubjectResponse> responses = new ArrayList<>();
 
-        return subjectList;
+        for(Subject subject: subjectList){
+            SubjectResponse subjectResponse = new SubjectResponse();
+            subjectResponse.setId(subject.getId());
+            subjectResponse.setName(subject.getName());
+            subjectResponse.setArchieved(subject.isArchieved());
+            List<Subject> helper = new ArrayList<>();
+            helper.add(subject);
+            Optional<Clazz> clazz = clazzRepository.findBySubjects(helper);
+if(clazz.isPresent()){
+    subjectResponse.setClazzName(clazz.get().getName());
+
+}
+responses.add(subjectResponse);
+helper.remove(0);
+        }
+
+        return responses;
     }
 
-    @Override
-    @Transactional
-    public void assignClazz(Long id, String clazzName) {
-        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
-        if (!optionalSubject.isPresent()){
-            throw new NoSuchElementException("This subject doesnt exist");
-        }
-
-        Optional<Clazz> optionalClazz = clazzRepository.findByName(clazzName);
-        if (!optionalClazz.isPresent()){
-            throw new NoSuchElementException("This class doesnt exist");
-        }
-        if (optionalClazz.get().getSubjects().contains(optionalSubject.get())){
-            throw new IllegalArgumentException("This class already has this subject");
-        }
-
-        Subject subject = entityManager.getReference(Subject.class, optionalSubject.get().getId());
-        List<Subject> list;
-        if(optionalClazz.get().getSubjects()==null){
-             list = new ArrayList<>();
-            list.add(subject);
-        }
-        else{
-            list=optionalClazz.get().getSubjects();
-            list.add(subject);
-        }
-        optionalClazz.get().setSubjects(list);
-
-        entityManager.persist(optionalClazz.get());
-
-    }
+//    @Override
+//    @Transactional
+//    public void assignClazz(Long id, String clazzName) {
+//        Optional<Subject> optionalSubject = (Optional<Subject>) Hibernate.unproxy(subjectRepository.findById(id));
+//        if (!optionalSubject.isPresent()){
+//            throw new NoSuchElementException("This subject doesnt exist");
+//        }
+//
+//        Optional<Clazz> optionalClazz = clazzRepository.findByName(clazzName);
+//        if (!optionalClazz.isPresent()){
+//            throw new NoSuchElementException("This class doesnt exist");
+//        }
+//        if (optionalClazz.get().getSubjects().contains(optionalSubject.get())){
+//            throw new IllegalArgumentException("This class already has this subject");
+//        }
+//
+//        Subject subject = entityManager.getReference(Subject.class, optionalSubject.get().getId());
+//        List<Subject> list;
+//        if(optionalClazz.get().getSubjects()==null){
+//             list = new ArrayList<>();
+//            list.add(subject);
+//        }
+//        else{
+//            list=optionalClazz.get().getSubjects();
+//            list.add(subject);
+//        }
+//        optionalClazz.get().setSubjects(list);
+//
+//        entityManager.persist(optionalClazz.get());
+//
+//    }
 
 
 }

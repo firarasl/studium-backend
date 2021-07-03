@@ -32,11 +32,13 @@ public class MessageScheduler {
         for(Message message: messageList){
             Duration between = Duration.between(message.getCreated().toInstant(), Instant.now());
 
-            if (between.get(ChronoUnit.DAYS)>7){
+            if (between.toDays()>7){
                 listToDelete.add(message);
             }
         }
 
-        messageRepository.deleteAll(listToDelete);
+        if (listToDelete.size()>0){
+            messageRepository.deleteAll(listToDelete);
+        }
     }
 }

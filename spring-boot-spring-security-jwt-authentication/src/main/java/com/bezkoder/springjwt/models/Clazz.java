@@ -31,11 +31,6 @@ public class Clazz {
 
 
 
-    @ManyToMany()
-    @JoinTable(	name = "clazz_test",
-            joinColumns = @JoinColumn(name = "clazz_id"),
-            inverseJoinColumns = @JoinColumn(name = "tests_id"))
-    private List<Test> tests = new ArrayList<>();
 
 
 
@@ -76,13 +71,6 @@ public class Clazz {
         this.subjects = subjects;
     }
 
-    public List<Test> getTests() {
-        return tests;
-    }
-
-    public void setTests(List<Test> tests) {
-        this.tests = tests;
-    }
 
     @Override
     public String toString() {
@@ -90,7 +78,6 @@ public class Clazz {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", subjects=" + subjects +
-                ", tests=" + tests +
                 '}';
     }
 }

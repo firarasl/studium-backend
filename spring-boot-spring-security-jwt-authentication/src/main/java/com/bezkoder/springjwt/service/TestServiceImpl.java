@@ -7,10 +7,7 @@ import com.bezkoder.springjwt.payload.response.Student;
 import com.bezkoder.springjwt.payload.response.StudentRespond;
 import com.bezkoder.springjwt.payload.response.TestGPA;
 import com.bezkoder.springjwt.payload.response.TestResponse;
-import com.bezkoder.springjwt.repository.SubjectRepository;
-import com.bezkoder.springjwt.repository.TestResultRepository;
-import com.bezkoder.springjwt.repository.TestsRepository;
-import com.bezkoder.springjwt.repository.UserRepository;
+import com.bezkoder.springjwt.repository.*;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -36,18 +33,27 @@ private TestsRepository testsRepository;
     private TestResultRepository testResultRepository;
     @Autowired
     private SubjectRepository subjectRepository;
+    @Autowired
+    private ClazzRepository clazzRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     @Override
-    public void addTest(String name, Timestamp date, String subjectName, Long teacherId) {
+    public void addTest(String name, Timestamp date, String subjectName, Long teacherId, String clazzName) {
         Test test = new Test();
         test.setName(name);
         test.setDate(date);
 
-        Optional<Subject> subject =
-                (Optional<Subject>) Hibernate.unproxy(subjectRepository.findByName(subjectName));
+        Optional<Clazz> clazzOptional =
+                (Optional<Clazz>) Hibernate.unproxy(clazzRepository.findByName(clazzName));
+
+        if (!clazzOptional.isPresent()){
+            throw new NoSuchElementException("This class doesnt exist");
+        }
+
+
+        Optional<Subject> subject =clazzOptional.get().getSubjects().stream().filter(o -> o.getName().equals(subjectName)).findFirst();
 
         if (!subject.isPresent()){
             throw new NoSuchElementException("This subject doesnt exist");
@@ -78,13 +84,27 @@ else{
             throw new NoSuchElementException("This test doesnt exist");
         }
 
-        if (!optionalTest.get().getName().equals(name)){
-            optionalTest.get().setName(name);
+        if ((name==null || name.isEmpty()) && timestamp ==null ){
+            throw new NoSuchElementException("Change something!");
         }
+if(name!=null && !name.isEmpty()){
+    if (!optionalTest.get().getName().equals(name)){
+        optionalTest.get().setName(name);
+    }
+    else{
+        throw new IllegalArgumentException("The same name for the test");
+    }
+}
 
-        if (!optionalTest.get().getDate().equals(timestamp)){
-            optionalTest.get().setDate(timestamp);
-        }
+if(timestamp!=null){
+    if (!optionalTest.get().getDate().equals(timestamp)){
+        optionalTest.get().setDate(timestamp);
+    }
+    else{
+        throw new NoSuchElementException("This test is already on this day");
+    }
+}
+
 
         testsRepository.save(optionalTest.get());
 
@@ -113,20 +133,26 @@ else{
     }
 
     @Override
-    public String changeTestGrade(Long testId, Long studentId, double grade) {
+    public String changeTestGrade(Long testId, String studentName, double grade) {
 
         Optional<Test> testOptional = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(testId));
         if (!testOptional.isPresent()){
             throw new NoSuchElementException("This test doesnt exist");
         }
 
-        Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findById(studentId));
+        Optional<User> currentUser = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(studentName));
         if(!currentUser.isPresent()){
             throw new NoSuchElementException("This username doesnt exist!");
         }
 
         if (!currentUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
             throw new NoSuchElementException("This user isnt a student!");
+        }
+
+
+        if (currentUser.get().getClazz()==null || currentUser.get().getClazz().getSubjects()==null ||
+                ! currentUser.get().getClazz().getSubjects().contains(testOptional.get().getSubject())){
+            throw new IllegalArgumentException("This student can't participate in this test");
         }
 
 
@@ -152,7 +178,7 @@ else{
 
     @Override
     public void parseCSV(MultipartFile file) {
-
+        List<CSV> results=null;
         try (        Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
 
 
@@ -163,47 +189,79 @@ else{
             strategy.setColumnMapping(fields);
 
 
-            CsvToBean csvToBean = new CsvToBeanBuilder(reader)
+            CsvToBean  csvToBean = new CsvToBeanBuilder(reader)
                     .withMappingStrategy(strategy)
                     .withSkipLines(1)
                     .withSeparator(',')
                     .withIgnoreLeadingWhiteSpace(true)
                     .build();
+             results = csvToBean.parse();
 
-            List<CSV> results = csvToBean.parse();
 
-            for (int i = 0; i < results.size(); i++) {
-                Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(results.get(i).getUsername()));
-
-                if (!optionalUser.isPresent()){
-                    throw new NoSuchElementException("This user doesnt exist");
-                }
-                Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(results.get(i).getTestId()));
-
-                if (!optionalTest.isPresent()){
-                    throw new NoSuchElementException("This test doesnt exist");
-                }
-                if(!optionalUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
-                    throw new IllegalArgumentException("This user isnt a student");
-                }
-
-                if (!optionalUser.get().getClazz().getSubjects().contains(optionalTest.get().getSubject())){
-                    throw new IllegalArgumentException("This student doesnt have this test's subject");
-                }
-
-                TestResult testResult = new TestResult();
-                testResult.setUser(optionalUser.get());
-                testResult.setTest(optionalTest.get());
-                testResult.setGrade(results.get(i).getGrade());
-
-                testResultRepository.save(testResult);
-
-            }
+//            List<CSV> results = csvToBean.parse();
+//
+//            for (int i = 0; i < results.size(); i++) {
+//                Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(results.get(i).getUsername()));
+//
+//                if (!optionalUser.isPresent()){
+//                    throw new NoSuchElementException("This user doesnt exist");
+//                }
+//                Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(results.get(i).getTestId()));
+//
+//                if (!optionalTest.isPresent()){
+//                    throw new NoSuchElementException("This test doesnt exist");
+//                }
+//                if(!optionalUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+//                    throw new IllegalArgumentException("This user isnt a student");
+//                }
+//
+//                if (!optionalUser.get().getClazz().getSubjects().contains(optionalTest.get().getSubject())){
+//                    throw new IllegalArgumentException("This student doesnt have this test's subject");
+//                }
+//
+//                TestResult testResult = new TestResult();
+//                testResult.setUser(optionalUser.get());
+//                testResult.setTest(optionalTest.get());
+//                testResult.setGrade(results.get(i).getGrade());
+//
+//                testResultRepository.save(testResult);
+//
+//            }
 
         }
         catch (Exception ex) {
                throw new IllegalArgumentException("An error occurred while processing the CSV file.");
             }
+
+
+
+        for (int i = 0; i < results.size(); i++) {
+            Optional<User> optionalUser = (Optional<User>) Hibernate.unproxy(userRepository.findByUsername(results.get(i).getUsername()));
+
+            if (!optionalUser.isPresent()){
+                throw new NoSuchElementException("The user "+results.get(i).getUsername()+" doesnt exist");
+            }
+            Optional<Test> optionalTest = (Optional<Test>) Hibernate.unproxy(testsRepository.findById(results.get(i).getTestId()));
+
+            if (!optionalTest.isPresent()){
+                throw new NoSuchElementException("The test with id "+results.get(i).getTestId()+"  doesnt exist");
+            }
+            if(!optionalUser.get().getRole().getName().equals(ERole.ROLE_STUDENT)){
+                throw new IllegalArgumentException("The user  "+results.get(i).getUsername()+" isnt a student");
+            }
+
+            if (!optionalUser.get().getClazz().getSubjects().contains(optionalTest.get().getSubject())){
+                throw new IllegalArgumentException("The student "+results.get(i).getUsername()+" doesnt have this test's subject");
+            }
+
+            TestResult testResult = new TestResult();
+            testResult.setUser(optionalUser.get());
+            testResult.setTest(optionalTest.get());
+            testResult.setGrade(results.get(i).getGrade());
+
+            testResultRepository.save(testResult);
+
+        }
     }
 
     @Override
@@ -309,7 +367,13 @@ else{
         testResponse.setName(testOptional.get().getName());
 
         testResponse.setSubjectName(testOptional.get().getSubject().getName());
+        List<Subject> subjectList= new ArrayList<>();
+        subjectList.add(testOptional.get().getSubject());
+        Optional<Clazz> clazz = clazzRepository.findBySubjects(subjectList);
 
+        if (clazz.isPresent()){
+            testResponse.setClazzName(clazz.get().getName());
+        }
         List<Student> students = new ArrayList<>();
 
 

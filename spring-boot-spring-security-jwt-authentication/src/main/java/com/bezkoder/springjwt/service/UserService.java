@@ -15,7 +15,7 @@ import java.util.Set;
 
 public interface UserService {
 
-    List<User> getAllUsers();
+    List<User> getAllUsers(Long id);
 
     Optional<User> getUserByUsername(String username);
 
@@ -27,7 +27,7 @@ public interface UserService {
 
     void updateUser(UserUpdateRequest updateRequest, Long userId);
 
-    Set<StudentRespond> getAllStudents(Long teacherId);
+    Set<StudentRespond> getAllTeachersStudents(Long teacherId);
 
     User getMyData(Long id);
 

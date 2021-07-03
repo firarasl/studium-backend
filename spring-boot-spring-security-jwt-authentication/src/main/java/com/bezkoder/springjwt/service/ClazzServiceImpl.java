@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 
@@ -92,7 +89,7 @@ public class ClazzServiceImpl implements ClazzService {
             throw new IllegalArgumentException("This user isnt a student!");
         }
 
-        if (user.get().getClazz().getId() == clazzId){
+        if (user.get().getClazz()!=null && user.get().getClazz().getId() == clazzId){
             throw new IllegalArgumentException("This student is already in this class!");
         }
         Clazz classObject = new Clazz();
@@ -131,6 +128,17 @@ public class ClazzServiceImpl implements ClazzService {
         }
         userRepository.saveAll(userList);
 
+        List<Subject> subjectList= clazz.get().getSubjects();
+        List<Subject> subjectsToDelete= new ArrayList<>();
+
+        for(Subject subject: subjectList){
+            if (!subject.isArchieved()){
+                subjectsToDelete.add(subject);
+            }
+        }
+subjectRepository.deleteAll(subjectsToDelete);
+        clazz.get().setSubjects(Collections.<Subject>emptyList());
+        entityManager.persist(clazz.get());
         entityManager.remove(clazz.get());
 //            clazzRepository.deleteById(clazzId);
     }

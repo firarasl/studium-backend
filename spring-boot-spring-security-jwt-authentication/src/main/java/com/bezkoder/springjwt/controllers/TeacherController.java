@@ -2,6 +2,7 @@ package com.bezkoder.springjwt.controllers;
 
 
 import com.bezkoder.springjwt.payload.request.AddTestRequest;
+import com.bezkoder.springjwt.payload.request.TestUpdate;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.security.UserDetailsImpl;
 import com.bezkoder.springjwt.service.SubjectService;
@@ -40,7 +41,7 @@ public class TeacherController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
 
-        return ResponseEntity.ok(userService.getAllStudents(currentUser.getId()));
+        return ResponseEntity.ok(userService.getAllTeachersStudents(currentUser.getId()));
 
     }
 
@@ -54,14 +55,10 @@ public class TeacherController {
         return ResponseEntity.ok(subjectService.getAllSubejectsByTeacher(currentUser.getId()));
     }
 
-//
-//    @PostMapping("/add-test")
-//    public ResponseEntity<?> addTest(@RequestParam @NotEmpty String name,
-//                                     @RequestParam @NotNull Timestamp date){
-//    testService.addTest(name, date)
-//        return ResponseEntity.ok(testService.());
-//
-//    }
+
+
+//    ----------------------- tests ----------------------------------
+
     @PostMapping("/add-test")
     public ResponseEntity<?> addTest(@RequestBody AddTestRequest request
                                      ){
@@ -77,7 +74,7 @@ public class TeacherController {
                     "Not proper date format"),
                     HttpStatus.BAD_REQUEST);
         }
-        testService.addTest(request.getName(), timestamp, request.getSubjectName(), currentUser.getId());
+        testService.addTest(request.getName(), timestamp, request.getSubjectName(), currentUser.getId(), request.getClazzName());
         return ResponseEntity.ok(new MessageResponse("Added new test successfully!"));
 
 
@@ -93,19 +90,19 @@ public class TeacherController {
 
     }
 
-    @PostMapping("/update-test")
-    public ResponseEntity<?> updateTest(@RequestParam @NotEmpty @NotNull String name,
+    @PutMapping("/update-test")
+    public ResponseEntity<?> updateTest(@RequestParam  String name,
                                         @RequestParam @NotEmpty @NotNull Long id,
-                                     @RequestParam @NotEmpty @NotNull String date){
+                                     @RequestParam  String date){
 
-
+        Timestamp timestamp = null;
         try {
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
-            Date parsedDate = dateFormat.parse(date);
-            Timestamp timestamp = new java.sql.Timestamp(parsedDate.getTime());
-            testService.updateTest(id,name, timestamp);
-            return ResponseEntity.ok(new MessageResponse("Updated test successfully!"));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+            if (date !=null && !date.isEmpty()){
+                Date parsedDate = dateFormat.parse(date);
+                timestamp = new java.sql.Timestamp(parsedDate.getTime());
+            }
 
         } catch(Exception e) {
             return new ResponseEntity<>(
@@ -113,15 +110,18 @@ public class TeacherController {
                     HttpStatus.BAD_REQUEST);
         }
 
+        testService.updateTest(id,name, timestamp);
+        return ResponseEntity.ok(new MessageResponse("Updated test successfully!"));
+
     }
 
 
 
 
-    @GetMapping("/all-students-test")
-    public ResponseEntity<?> getAllStudentsOfTest(@RequestParam @NotEmpty @NotNull Long id){
-        return ResponseEntity.ok(testService.getAllStudentsOfTest(id));
-    }
+//    @GetMapping("/all-students-test")
+//    public ResponseEntity<?> getAllStudentsOfTest(@RequestParam @NotEmpty @NotNull Long id){
+//        return ResponseEntity.ok(testService.getAllStudentsOfTest(id));
+//    }
 
 
 
@@ -132,11 +132,9 @@ public class TeacherController {
 
 
     @PutMapping("change-test-grade")
-    public ResponseEntity<?> changeTestGrade(@RequestParam @NotEmpty @NotNull Long testId,
-                                             @RequestParam @NotEmpty @NotNull Long studentId,
-                                             @RequestParam @NotNull @NotEmpty double grade){
-        String response = testService.changeTestGrade(testId, studentId, grade);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> changeTestGrade(@RequestBody TestUpdate request){
+        String response = testService.changeTestGrade(request.getTestId(), request.getStudentName(), request.getGrade());
+        return ResponseEntity.ok(new MessageResponse(response));
     }
 
 
@@ -153,7 +151,7 @@ public class TeacherController {
     @DeleteMapping("delete-test")
     public ResponseEntity<?> deleteTest(@RequestParam @NotEmpty @NotNull Long testId){
         testService.deleteTest(testId);
-        return ResponseEntity.ok("Deleted the test!");
+        return ResponseEntity.ok(new MessageResponse("Deleted the test!"));
     }
 
 

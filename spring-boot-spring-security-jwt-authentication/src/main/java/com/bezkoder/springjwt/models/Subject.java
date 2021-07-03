@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(	name = "subject",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "name")})
+@Table(	name = "subject")
 
 public class Subject {
 
@@ -61,6 +59,9 @@ public class Subject {
     }
 
     public void setArchieved(Boolean archieved) {
+        if (isArchieved){
+            throw new IllegalArgumentException("Subject is already archieved");
+        }
         isArchieved = archieved;
     }
 

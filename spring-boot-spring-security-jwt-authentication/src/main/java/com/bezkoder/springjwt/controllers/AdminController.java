@@ -5,19 +5,19 @@ import com.bezkoder.springjwt.models.Clazz;
 import com.bezkoder.springjwt.models.ERole;
 import com.bezkoder.springjwt.models.Role;
 import com.bezkoder.springjwt.models.User;
-import com.bezkoder.springjwt.payload.request.ManageClazzRequest;
-import com.bezkoder.springjwt.payload.request.SignupRequest;
-import com.bezkoder.springjwt.payload.request.SubjectUpdateRequest;
-import com.bezkoder.springjwt.payload.request.UserUpdateRequest;
+import com.bezkoder.springjwt.payload.request.*;
 import com.bezkoder.springjwt.payload.response.MessageResponse;
 import com.bezkoder.springjwt.repository.RoleRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
+import com.bezkoder.springjwt.security.UserDetailsImpl;
 import com.bezkoder.springjwt.service.ClazzService;
 import com.bezkoder.springjwt.service.SubjectService;
 import com.bezkoder.springjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,7 +53,10 @@ public class AdminController {
 
     @GetMapping("/all-users")
     public ResponseEntity<?> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllUsers());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+
+        return ResponseEntity.ok(userService.getAllUsers(currentUser.getId()));
 
     }
 
@@ -73,7 +76,6 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     @DeleteMapping("delete-user")
     public ResponseEntity<?> deleteUser(@RequestParam Long id){
-        System.out.println(id);
         userService.deleteUser(id);
         return ResponseEntity.ok(new MessageResponse("User was deleted successfully!"));
     }
@@ -144,9 +146,8 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
 
     @PostMapping("/add-subject")
-    public ResponseEntity<?> addSubject(@RequestParam String name,
-                                        @RequestParam String teacherName){
-        subjectService.saveSubject(name, teacherName);
+    public ResponseEntity<?> addSubject(@RequestBody AddSubjectRequest request){
+        subjectService.saveSubject(request.getName(), request.getTeacherName(), request.getClazzName());
         return ResponseEntity.ok(new MessageResponse("Added a new subject!"));
     }
 
@@ -154,16 +155,15 @@ public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest updateRequest
 
     @PutMapping("/update-subject")
     public ResponseEntity<?> updateSubject(@RequestBody SubjectUpdateRequest subjectUpdateRequest){
-        System.out.println(subjectUpdateRequest);
         subjectService.updateSubject(subjectUpdateRequest);
         return ResponseEntity.ok(new MessageResponse("Subject was updated !"));
     }
 
-    @PutMapping("/subject-assign-clazz")
-    public ResponseEntity<?> updateSubject(@RequestParam Long id, String clazzName){
-        subjectService.assignClazz(id, clazzName);
-        return ResponseEntity.ok(new MessageResponse("Subject was assigned to a class !"));
-    }
+//    @PutMapping("/subject-assign-clazz")
+//    public ResponseEntity<?> updateSubject(@RequestParam Long id, String clazzName){
+//        subjectService.assignClazz(id, clazzName);
+//        return ResponseEntity.ok(new MessageResponse("Subject was assigned to a class !"));
+//    }
 
 
 

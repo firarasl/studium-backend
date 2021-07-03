@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
-public class TestResponse {
+public class  TestResponse {
 
     private Long id;
 
@@ -13,6 +13,7 @@ public class TestResponse {
 
     private Timestamp date;
 
+    private String clazzName;
 
     private String subjectName;
 
@@ -40,6 +41,14 @@ public class TestResponse {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getClazzName() {
+        return clazzName;
+    }
+
+    public void setClazzName(String clazzName) {
+        this.clazzName = clazzName;
     }
 
     public Timestamp getDate() {
